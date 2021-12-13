@@ -23,6 +23,9 @@ jobs:
           ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
 
+    - name: Download Dependencies
+      run: go mod download
+
     - name: Test
       run: go test -v ./...
 
