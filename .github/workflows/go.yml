@@ -1,0 +1,45 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+        
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+    - name: Test
+      run: go test -v ./...
+
+    - name: Build
+      run: |
+        GOOS=windows go build -o f1-metrics.exe -v ./...
+        GOOS=linux GOARCH=amd64 -o f1-metrics.amd64 go build -v ./...
+        GOOS=linux GOARCH=ppc64 -o f1-metrics.ppc64 go build -v ./...
+      
+    - name: Create Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          ./**/*.exe
+          ./**/*.amd64
+          ./**/*.ppc64
