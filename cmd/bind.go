@@ -137,6 +137,7 @@ for the packet ids to select.
 					if err != nil {
 						panic(err)
 					}
+					req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 					client := clientPool.Get().(*http.Client)
 					res, err := client.Do(req)
