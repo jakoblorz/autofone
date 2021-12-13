@@ -31,9 +31,8 @@ jobs:
 
     - name: Build
       run: |
-        GOOS=windows go build -o f1-metrics.exe -v .
-        GOOS=linux GOARCH=amd64 -o f1-metrics.amd64 go build -v .
-        GOOS=linux GOARCH=ppc64 -o f1-metrics.ppc64 go build -v .
+        GOOS=linux GOARCH=amd64 go build -o f1-metrics.amd64 -v .
+        GOOS=linux GOARCH=ppc64 go build -o f1-metrics.ppc64 -v .
       
     - name: Create Release
       uses: "marvinpinto/action-automatic-releases@latest"
