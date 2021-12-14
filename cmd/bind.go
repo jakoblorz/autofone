@@ -45,7 +45,7 @@ for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			conn, err := net.ListenUDP("udp", &net.UDPAddr{
+			conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
 				IP:   net.ParseIP("localhost"),
 				Port: port,
 			})
@@ -55,6 +55,8 @@ for the packet ids to select.
 			}
 			defer conn.Close()
 
+			verbosef("awaiting packets from %s", conn.RemoteAddr().String())
+
 			ch := make(chan interface{})
 			go func(conn *net.UDPConn) {
 				defer close(ch)
@@ -62,7 +64,7 @@ for the packet ids to select.
 			READ_UDP:
 				for {
 					buf := make([]byte, 1024+1024/2)
-					_, _, err := conn.ReadFromUDP(buf)
+					n, _, err := conn.ReadFromUDP(buf)
 					if err != nil {
 						log.Printf("read error: %+v", err)
 						continue
@@ -82,7 +84,10 @@ for the packet ids to select.
 						}
 					}
 					if c != 0 {
+						verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
 						continue READ_UDP
+					} else {
+						verbosef("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
 					}
 
 					pack := newPacketById(header.PacketID)
@@ -138,6 +143,8 @@ for the packet ids to select.
 						panic(err)
 					}
 					req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+					verbosef("posting with len = %d bytes json payload", len(data))
 
 					client := clientPool.Get().(*http.Client)
 					res, err := client.Do(req)
