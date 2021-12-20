@@ -16,7 +16,9 @@ var (
 )
 
 func verbosef(format string, args ...interface{}) {
-	log.Printf(format, args...)
+	if verbose {
+		log.Printf(format, args...)
+	}
 }
 
 func init() {

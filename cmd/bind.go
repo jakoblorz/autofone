@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -21,9 +22,10 @@ import (
 )
 
 var (
-	to     string
-	port   int
-	filter []uint
+	post    string
+	port    int
+	filter  []uint
+	logJSON bool
 
 	clientPool = &sync.Pool{
 		New: func() interface{} {
@@ -44,8 +46,7 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/env/packe
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-
-			conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
+			conn, err := net.ListenUDP("udp", &net.UDPAddr{
 				IP:   net.ParseIP("localhost"),
 				Port: port,
 			})
@@ -55,125 +56,17 @@ for the packet ids to select.
 			}
 			defer conn.Close()
 
-			verbosef("awaiting packets from %s", conn.RemoteAddr().String())
-
-			ch := make(chan interface{})
-			go func(conn *net.UDPConn) {
-				defer close(ch)
-
-			READ_UDP:
-				for {
-					buf := make([]byte, 1024+1024/2)
-					n, _, err := conn.ReadFromUDP(buf)
-					if err != nil {
-						log.Printf("read error: %+v", err)
-						continue
-					}
-
-					header := new(packets.PacketHeader)
-					if err = read(buf, header); err != nil {
-						log.Printf("%+v", err)
-						continue
-					}
-
-					var c uint8
-					for _, f := range filter {
-						c = uint8(f) ^ header.PacketID
-						if c == 0 {
-							break
-						}
-					}
-					if c != 0 {
-						verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
-						continue READ_UDP
-					} else {
-						verbosef("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
-					}
-
-					pack := newPacketById(header.PacketID)
-					if pack == nil {
-						log.Printf("invalid packet: %d", header.PacketID)
-						continue
-					}
-
-					if err = read(buf, pack); err != nil {
-						log.Printf("failed to read packet %d: %+v", header.PacketID, err)
-						continue
-					}
-
-					if header.PacketID == env.PacketEvent {
-						details := resolveEventDetails(pack.(*packets.PrePacketEventData))
-						pre := pack.(*packets.PrePacketEventData)
-						if details != nil {
-							err = read(pre.EventDetails[:unsafe.Sizeof(details)], details)
-							if err != nil {
-								log.Printf("event packet details read error: %+v", err)
-								continue
-							}
-						}
-						pack = &packets.PacketEventData{
-							Header:          pre.Header,
-							EventStringCode: pre.EventStringCode,
-							EventDetails:    details,
-						}
-					}
-					ch <- pack
-				}
-			}(conn)
-
+			verbosef("awaiting packets from %s", conn.LocalAddr().String())
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+
+			stream := process(make(chan interface{}))
 			go func() {
-				onProxyPacket := func(pack interface{}) {
-					defer func() {
-						if err := recover(); err != nil {
-							log.Printf("%+v", err)
-							err = binary.Write(os.Stderr, binary.LittleEndian, pack)
-							if err != nil {
-								log.Printf("%+v", err)
-							}
-						}
-					}()
-					data, err := json.Marshal(pack)
-					if err != nil {
-						panic(err)
-					}
-					req, err := http.NewRequest("POST", to, bytes.NewBuffer(data))
-					if err != nil {
-						panic(err)
-					}
-					req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-					verbosef("posting with len = %d bytes json payload", len(data))
-
-					client := clientPool.Get().(*http.Client)
-					res, err := client.Do(req)
-					clientPool.Put(client)
-					if err != nil {
-						panic(err)
-					}
-					defer res.Body.Close()
-
-					_, err = io.Copy(os.Stdout, res.Body)
-					if err != nil {
-						panic(err)
-					}
-				}
-
-				for {
-					select {
-					case <-ctx.Done():
-						for {
-							_, ok := <-ch
-							if !ok {
-								return
-							}
-						}
-					case pack := <-ch:
-						onProxyPacket(pack)
-					}
-				}
+				defer close(stream)
+				stream.readPacketsFromConn(conn, filter)
 			}()
+
+			go stream.handlePackets(ctx, post)
 
 			sig := make(chan os.Signal, 1)
 			signal.Notify(sig, os.Interrupt)
@@ -182,12 +75,135 @@ for the packet ids to select.
 	}
 )
 
+type process chan interface{}
+
+func (ch process) readPacketsFromConn(conn *net.UDPConn, filter []uint) {
+
+READ_UDP:
+	for {
+		buf := make([]byte, 1024+1024/2)
+		n, _, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			log.Printf("read error: %+v", err)
+			return
+		}
+
+		header := new(packets.PacketHeader)
+		if err = read(buf, header); err != nil {
+			log.Printf("%+v", err)
+			continue
+		}
+
+		var c uint8
+		for _, f := range filter {
+			c = uint8(f) ^ header.PacketID
+			if c == 0 {
+				break
+			}
+		}
+		if c != 0 {
+			verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
+			continue READ_UDP
+		} else {
+			verbosef("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
+		}
+
+		pack := newPacketById(header.PacketID)
+		if pack == nil {
+			log.Printf("invalid packet: %d", header.PacketID)
+			continue
+		}
+
+		if err = read(buf, pack); err != nil {
+			log.Printf("failed to read packet %d: %+v", header.PacketID, err)
+			continue
+		}
+
+		if header.PacketID == env.PacketEvent {
+			details := resolveEventDetails(pack.(*packets.PrePacketEventData))
+			pre := pack.(*packets.PrePacketEventData)
+			if details != nil {
+				err = read(pre.EventDetails[:unsafe.Sizeof(details)], details)
+				if err != nil {
+					log.Printf("event packet details read error: %+v", err)
+					continue
+				}
+			}
+			pack = &packets.PacketEventData{
+				Header:          pre.Header,
+				EventStringCode: pre.EventStringCode,
+				EventDetails:    details,
+			}
+		}
+		ch <- pack
+	}
+}
+
+func (ch process) handlePackets(ctx context.Context, to string) {
+	for {
+		select {
+		case <-ctx.Done():
+			for {
+				_, ok := <-ch
+				if !ok {
+					return
+				}
+			}
+		case pack := <-ch:
+			ch.writePacketToHTTP(pack, to)
+		}
+	}
+}
+
+func (process) writePacketToHTTP(pack interface{}, to string) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("%+v", err)
+			err = binary.Write(os.Stderr, binary.LittleEndian, pack)
+			if err != nil {
+				log.Printf("%+v", err)
+			}
+		}
+	}()
+	data, err := json.Marshal(pack)
+	if err != nil {
+		panic(err)
+	}
+	req, err := http.NewRequest("POST", to, bytes.NewBuffer(data))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	if verbose || logJSON {
+		message := fmt.Sprintf("posting with len = %d bytes json payload", len(data))
+		if logJSON {
+			message = fmt.Sprintf("%s: %s", message, string(data))
+		}
+		log.Print(message)
+	}
+
+	client := clientPool.Get().(*http.Client)
+	res, err := client.Do(req)
+	clientPool.Put(client)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	_, err = io.Copy(os.Stdout, res.Body)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func init() {
 	rootCmd.AddCommand(bindCmd)
 
-	bindCmd.Flags().StringVar(&to, "to", "https://localhost:8081/f1", "FQURL to post the packets to")
+	bindCmd.Flags().StringVar(&post, "to", "https://localhost:8081/f1", "FQURL to post the packets to")
 	bindCmd.Flags().IntVar(&port, "port", 20777, "UDP port to listen on")
 	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(env.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
+	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to destination")
 }
 
 func read(buf []byte, pack interface{}) error {
