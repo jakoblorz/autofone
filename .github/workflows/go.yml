@@ -31,8 +31,11 @@ jobs:
 
     - name: Build
       run: |
-        GOOS=linux GOARCH=amd64 go build -o f1-metrics.amd64 -v .
-        GOOS=linux GOARCH=ppc64 go build -o f1-metrics.ppc64 -v .
+        GOOS=darwin GOARCH=amd64 go build -o f1-metrics-darwin.amd64 -v .
+        GOOS=darwin GOARCH=arm64 go build -o f1-metrics-darwin.arm64 -v .
+        GOOS=linux GOARCH=amd64 go build -o f1-metrics-linux.amd64 -v .
+        GOOS=linux GOARCH=arm64 go build -o f1-metrics-linux.arm64 -v .
+        GOOS=linux GOARCH=ppc64 go build -o f1-metrics-linux.ppc64 -v .
         
     - name: Build Windows
       run: GOOS=windows go build -o f1-metrics.exe -v .
@@ -46,5 +49,6 @@ jobs:
         title: "Development Build"
         files: |
           ./**/*.exe
+          ./**/*.arm64
           ./**/*.amd64
           ./**/*.ppc64
