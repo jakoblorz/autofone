@@ -26,6 +26,8 @@ var (
 	port    int
 	filter  []uint
 	logJSON bool
+	logPack bool
+	logRaw  bool
 
 	clientPool = &sync.Pool{
 		New: func() interface{} {
@@ -104,8 +106,12 @@ READ_UDP:
 		if c != 0 {
 			verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
 			continue READ_UDP
-		} else {
-			verbosef("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
+		} else if verbose || logRaw {
+			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
+			if logRaw {
+				message = fmt.Sprintf("%s: %+b", message, buf)
+			}
+			log.Print(message)
 		}
 
 		pack := newPacketById(header.PacketID)
@@ -135,6 +141,11 @@ READ_UDP:
 				EventDetails:    details,
 			}
 		}
+
+		if logPack {
+			log.Printf("processing package: %+v", pack)
+		}
+
 		ch <- pack
 	}
 }
@@ -169,11 +180,6 @@ func (process) writePacketToHTTP(pack interface{}, to string) {
 	if err != nil {
 		panic(err)
 	}
-	req, err := http.NewRequest("POST", to, bytes.NewBuffer(data))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	if verbose || logJSON {
 		message := fmt.Sprintf("posting with len = %d bytes json payload", len(data))
@@ -182,6 +188,16 @@ func (process) writePacketToHTTP(pack interface{}, to string) {
 		}
 		log.Print(message)
 	}
+
+	if len(to) == 0 {
+		return
+	}
+
+	req, err := http.NewRequest("POST", to, bytes.NewBuffer(data))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	client := clientPool.Get().(*http.Client)
 	res, err := client.Do(req)
@@ -200,10 +216,12 @@ func (process) writePacketToHTTP(pack interface{}, to string) {
 func init() {
 	rootCmd.AddCommand(bindCmd)
 
-	bindCmd.Flags().StringVar(&post, "to", "https://localhost:8081/f1", "FQURL to post the packets to")
+	bindCmd.Flags().StringVar(&post, "to", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
 	bindCmd.Flags().IntVar(&port, "port", 20777, "UDP port to listen on")
 	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(env.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to destination")
+	bindCmd.Flags().BoolVar(&logPack, "pack", false, "Log unmarshaled data in go representation")
+	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received")
 }
 
 func read(buf []byte, pack interface{}) error {
