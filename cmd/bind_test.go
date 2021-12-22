@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/packets"
 	"github.com/jakoblorz/f1-metrics-transformer/constants"
+	"github.com/jakoblorz/f1-metrics-transformer/packets"
 	"github.com/jakoblorz/f1-metrics-transformer/pkg/udptest"
 	"github.com/stretchr/testify/assert"
 )
