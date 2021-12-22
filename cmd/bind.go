@@ -15,9 +15,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/env"
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/env/event"
 	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/packets"
+	"github.com/jakoblorz/f1-metrics-transformer/constants"
+	"github.com/jakoblorz/f1-metrics-transformer/constants/event"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +44,7 @@ and then sent to the provided HTTP server via POST.
 Use --filter to select the packets to subscribe to, otherwise 
 make sure that the HTTP server's DDOS protection is not kicking in.
 
-See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/env/packet_ids.go
+See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants/packet_ids.go
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -125,7 +125,7 @@ READ_UDP:
 			continue
 		}
 
-		if header.PacketID == env.PacketEvent {
+		if header.PacketID == constants.PacketEvent {
 			details := resolveEventDetails(pack.(*packets.PrePacketEventData))
 			pre := pack.(*packets.PrePacketEventData)
 			if details != nil {
@@ -218,7 +218,7 @@ func init() {
 
 	bindCmd.Flags().StringVar(&post, "to", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
 	bindCmd.Flags().IntVar(&port, "port", 20777, "UDP port to listen on")
-	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(env.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
+	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(constants.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to destination")
 	bindCmd.Flags().BoolVar(&logPack, "pack", false, "Log unmarshaled data in go representation")
 	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received")
@@ -235,25 +235,25 @@ func read(buf []byte, pack interface{}) error {
 
 func newPacketById(packetId uint8) interface{} {
 	switch packetId {
-	case env.PacketMotion:
+	case constants.PacketMotion:
 		return new(packets.PacketMotionData)
-	case env.PacketSession:
+	case constants.PacketSession:
 		return new(packets.PacketSessionData)
-	case env.PacketLap:
+	case constants.PacketLap:
 		return new(packets.PacketLapData)
-	case env.PacketEvent:
+	case constants.PacketEvent:
 		return new(packets.PrePacketEventData)
-	case env.PacketParticipants:
+	case constants.PacketParticipants:
 		return new(packets.PacketParticipantsData)
-	case env.PacketCarSetup:
+	case constants.PacketCarSetup:
 		return new(packets.PacketCarSetupData)
-	case env.PacketCarTelemetry:
+	case constants.PacketCarTelemetry:
 		return new(packets.PacketCarTelemetryData)
-	case env.PacketCarStatus:
+	case constants.PacketCarStatus:
 		return new(packets.PacketCarStatusData)
-	case env.PacketFinalClassification:
+	case constants.PacketFinalClassification:
 		return new(packets.PacketFinalClassificationData)
-	case env.PacketLobbyInfo:
+	case constants.PacketLobbyInfo:
 		return new(packets.PacketLobbyInfoData)
 	}
 
