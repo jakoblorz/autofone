@@ -11,6 +11,7 @@ func Splicer(ctx context.Context, onPacketReceived func(pack interface{})) step.
 	pool := &sync.Pool{
 		New: func() interface{} {
 			r := &spliceRoutine{
+				ctx:              ctx,
 				in:               make(chan interface{}),
 				onPacketReceived: onPacketReceived,
 			}

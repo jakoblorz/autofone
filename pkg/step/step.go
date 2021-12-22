@@ -40,6 +40,8 @@ func (p *step) Out() <-chan interface{} {
 }
 
 func (p *step) Process() {
+	defer close(p.out)
+
 	if p.in == nil && p.emitFunc != nil {
 		in := make(chan interface{}, 1)
 		go p.emitFunc(in)
