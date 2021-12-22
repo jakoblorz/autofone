@@ -15,9 +15,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/packets"
 	"github.com/jakoblorz/f1-metrics-transformer/constants"
 	"github.com/jakoblorz/f1-metrics-transformer/constants/event"
+	"github.com/jakoblorz/f1-metrics-transformer/packets"
 	"github.com/spf13/cobra"
 )
 
@@ -255,6 +255,10 @@ func newPacketById(packetId uint8) interface{} {
 		return new(packets.PacketFinalClassificationData)
 	case constants.PacketLobbyInfo:
 		return new(packets.PacketLobbyInfoData)
+	case constants.PacketCarDamage:
+		return new(packets.PacketCarDamageData)
+	case constants.PacketSessionHistory:
+		return new(packets.PacketSessionHistoryData)
 	}
 
 	return nil
