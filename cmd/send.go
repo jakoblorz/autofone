@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/env"
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/packets"
+	"github.com/jakoblorz/f1-metrics-transformer/constants"
+	"github.com/jakoblorz/f1-metrics-transformer/packets"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +36,7 @@ var (
 			if err != nil {
 				err = nil
 			} else {
-				verbosef("sending packet with id %d: %s", env.PacketMotion, buf.String())
+				verbosef("sending packet with id %d: %s", constants.PacketMotion, buf.String())
 			}
 
 			err = binary.Write(conn, binary.LittleEndian, &motionData)

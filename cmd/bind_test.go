@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/env"
 	"github.com/anilmisirlioglu/f1-telemetry-go/pkg/packets"
+	"github.com/jakoblorz/f1-metrics-transformer/constants"
 	"github.com/jakoblorz/f1-metrics-transformer/pkg/udptest"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +62,7 @@ func Test_process_readPacketsFromConn(t *testing.T) {
 
 	assert.NoError(t, udptest.NewConn(func(clientConn, serverConn net.Conn) error {
 		clientCh <- clientConn
-		stream.readPacketsFromConn(serverConn.(*net.UDPConn), []uint{uint(env.PacketMotion)})
+		stream.readPacketsFromConn(serverConn.(*net.UDPConn), []uint{uint(constants.PacketMotion)})
 		return nil
 	}, 2*time.Second))
 	assert.Equal(t, &motionData, <-stream)
