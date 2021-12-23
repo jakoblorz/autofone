@@ -7,14 +7,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bxcodec/faker/v3"
 	"github.com/jakoblorz/metrikxd/constants"
 	"github.com/jakoblorz/metrikxd/packets"
 	"github.com/jakoblorz/metrikxd/pkg/udptest"
 	"github.com/stretchr/testify/assert"
 )
 
+func createPopulatedPacket(pack interface{}) interface{} {
+	faker.FakeData(pack)
+	return pack
+}
+
 var (
-	motionData = packets.PacketMotionData{
+	motionData = *createPopulatedPacket(&packets.PacketMotionData{
 		Header: packets.PacketHeader{
 			PacketFormat:            2020,
 			GameMajorVersion:        1,
@@ -43,7 +49,7 @@ var (
 		AngularAccelerationY:   0.047205403,
 		AngularAccelerationZ:   1.0070984,
 		FrontWheelsAngle:       0,
-	}
+	}).(*packets.PacketMotionData)
 )
 
 func TestPacketReader_read(t *testing.T) {
