@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io"
-	"log"
 	"net"
 	"unsafe"
 
 	"github.com/jakoblorz/f1-metrics-transformer/constants"
 	"github.com/jakoblorz/f1-metrics-transformer/constants/event"
 	"github.com/jakoblorz/f1-metrics-transformer/packets"
+	"github.com/jakoblorz/f1-metrics-transformer/pkg/log"
 	"github.com/jakoblorz/f1-metrics-transformer/pkg/step"
 )
 
@@ -19,13 +20,15 @@ type PacketReader struct {
 	step.Step
 	io.Reader
 
-	filter []uint
+	filter    []uint
+	logBytes  bool
+	logStruct bool
 }
 
 func (u *PacketReader) read(ch chan<- interface{}) {
 	for {
 		buf := make([]byte, 1024+1024/2)
-		_, err := u.Read(buf)
+		n, err := u.Read(buf)
 		if err != nil {
 			log.Printf("read error: %+v", err)
 			return
@@ -45,15 +48,15 @@ func (u *PacketReader) read(ch chan<- interface{}) {
 			}
 		}
 		if c != 0 {
-			// verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
+			log.Verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
 			continue
-		} /* else if verbose || logRaw {
-			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
-			if logRaw {
-				message = fmt.Sprintf("%s: %+b", message, buf)
-			}
-			log.Print(message)
-		} */
+		}
+
+		message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
+		if u.logBytes {
+			message = fmt.Sprintf("%s: %+b", message, buf)
+		}
+		log.Print(message)
 
 		pack := newPacketById(header.PacketID)
 		if pack == nil {
@@ -83,17 +86,22 @@ func (u *PacketReader) read(ch chan<- interface{}) {
 			}
 		}
 
-		// if logPack {
-		// 	log.Printf("processing package: %+v", pack)
-		// }
+		if u.logStruct {
+			log.Printf("decoded package %d: %+v", header.PacketID, pack)
+		}
 
 		ch <- pack
 	}
-
 }
 
-func ReadUDPPackets(ctx context.Context, conn net.Conn, filter []uint) *PacketReader {
-	r := &PacketReader{Reader: conn, filter: filter}
+type PacketReaderOptions struct {
+	Filter           []uint
+	LogIncomingBytes bool
+	LogDecodedStruct bool
+}
+
+func ReadUDPPackets(ctx context.Context, conn net.Conn, opts *PacketReaderOptions) *PacketReader {
+	r := &PacketReader{Reader: conn, filter: opts.Filter, logBytes: opts.LogIncomingBytes, logStruct: opts.LogDecodedStruct}
 	r.Step = step.Emitter(ctx, r.read)
 	return r
 }

@@ -2,19 +2,27 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jakoblorz/f1-metrics-transformer/pkg/log"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var (
 	verbose bool
 	rootCmd = &cobra.Command{
 		Use: "f1-metrics-transformer",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			config := zap.NewProductionConfig()
+			if verbose {
+				config = zap.NewDevelopmentConfig()
+			}
+			log.DefaultLogger, _ = config.Build()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			app := fiber.New()
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))

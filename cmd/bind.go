@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -18,6 +17,7 @@ import (
 	"github.com/jakoblorz/f1-metrics-transformer/constants"
 	"github.com/jakoblorz/f1-metrics-transformer/constants/event"
 	"github.com/jakoblorz/f1-metrics-transformer/packets"
+	"github.com/jakoblorz/f1-metrics-transformer/pkg/log"
 	"github.com/spf13/cobra"
 )
 
