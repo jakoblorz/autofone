@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jakoblorz/f1-metrics-transformer/packets"
+	"github.com/jakoblorz/metrikxd/packets"
 	"github.com/stretchr/testify/assert"
 )
 

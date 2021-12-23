@@ -3,8 +3,8 @@ package pipe
 import (
 	"context"
 
-	"github.com/jakoblorz/f1-metrics-transformer/packets"
-	"github.com/jakoblorz/f1-metrics-transformer/pkg/step"
+	"github.com/jakoblorz/metrikxd/packets"
+	"github.com/jakoblorz/metrikxd/pkg/step"
 )
 
 type EventHandler struct {

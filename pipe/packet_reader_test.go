@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jakoblorz/f1-metrics-transformer/constants"
-	"github.com/jakoblorz/f1-metrics-transformer/packets"
-	"github.com/jakoblorz/f1-metrics-transformer/pkg/udptest"
+	"github.com/jakoblorz/metrikxd/constants"
+	"github.com/jakoblorz/metrikxd/packets"
+	"github.com/jakoblorz/metrikxd/pkg/udptest"
 	"github.com/stretchr/testify/assert"
 )
 

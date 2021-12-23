@@ -1,6 +1,6 @@
 package main
 
-import "github.com/jakoblorz/f1-metrics-transformer/cmd"
+import "github.com/jakoblorz/metrikxd/cmd"
 
 func main() {
 	cmd.Execute()

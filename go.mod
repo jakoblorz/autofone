@@ -1,4 +1,4 @@
-module github.com/jakoblorz/f1-metrics-transformer
+module github.com/jakoblorz/metrikxd
 
 go 1.16
 

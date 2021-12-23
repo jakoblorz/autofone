@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/jakoblorz/f1-metrics-transformer/pkg/step"
+	"github.com/jakoblorz/metrikxd/pkg/step"
 )
 
 func Splicer(ctx context.Context, onPacketReceived func(pack interface{})) step.Step {

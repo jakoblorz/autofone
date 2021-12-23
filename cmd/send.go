@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/jakoblorz/f1-metrics-transformer/constants"
-	"github.com/jakoblorz/f1-metrics-transformer/packets"
+	"github.com/jakoblorz/metrikxd/constants"
+	"github.com/jakoblorz/metrikxd/packets"
 	"github.com/spf13/cobra"
 )
 

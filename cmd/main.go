@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jakoblorz/f1-metrics-transformer/pkg/log"
+	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -15,7 +15,7 @@ import (
 var (
 	verbose bool
 	rootCmd = &cobra.Command{
-		Use: "f1-metrics-transformer",
+		Use: "metrikxd",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config := zap.NewProductionConfig()
 			if verbose {
