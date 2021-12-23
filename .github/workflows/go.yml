@@ -31,14 +31,14 @@ jobs:
 
     - name: Build
       run: |
-        GOOS=darwin GOARCH=amd64 go build -o f1-metrics-darwin.amd64 -v .
-        GOOS=darwin GOARCH=arm64 go build -o f1-metrics-darwin.arm64 -v .
-        GOOS=linux GOARCH=amd64 go build -o f1-metrics-linux.amd64 -v .
-        GOOS=linux GOARCH=arm64 go build -o f1-metrics-linux.arm64 -v .
-        GOOS=linux GOARCH=ppc64 go build -o f1-metrics-linux.ppc64 -v .
+        GOOS=darwin GOARCH=amd64 go build -o metrikxd-darwin.amd64 -v .
+        GOOS=darwin GOARCH=arm64 go build -o metrikxd-darwin.arm64 -v .
+        GOOS=linux GOARCH=amd64 go build -o metrikxd-linux.amd64 -v .
+        GOOS=linux GOARCH=arm64 go build -o metrikxd-linux.arm64 -v .
+        GOOS=linux GOARCH=ppc64 go build -o metrikxd-linux.ppc64 -v .
         
     - name: Build Windows
-      run: GOOS=windows go build -o f1-metrics.exe -v .
+      run: GOOS=windows go build -o metrikxd.exe -v .
       
     - name: Create Release
       uses: "marvinpinto/action-automatic-releases@latest"
