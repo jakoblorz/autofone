@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	entgo.io/ent v0.9.2-0.20210822190728-d84ac191b1c7
+	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gofiber/adaptor/v2 v2.1.15
 	github.com/gofiber/fiber/v2 v2.23.0
