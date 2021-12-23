@@ -44,7 +44,7 @@ type PacketSessionData struct {
 	SafetyCarStatus           uint8                     // 0 = no safety car, 1 = full safety car, 2 = virtual safety car
 	NetworkGame               uint8                     // 0 = offline, 1 = online
 	NumWeatherForecastSamples uint8                     // Number of weather samples to follow
-	WeatherForecastSamples    [20]WeatherForecastSample // Array of weather forecast samples
+	WeatherForecastSamples    [56]WeatherForecastSample // Array of weather forecast samples
 	ForecastAccuracy          uint8                     // 0 = Perfect, 1 = Approximate
 	AIDifficulty              uint8                     // AI Difficulty rating – 0-110
 	SeasonLinkIdentifier      uint32                    // Identifier for season - persists across saves
