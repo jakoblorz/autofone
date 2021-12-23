@@ -1,6 +1,10 @@
 package schema
 
-import "entgo.io/ent"
+import (
+	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
+	"entgo.io/ent/schema/field"
+)
 
 // Settings holds the schema definition for the Settings entity.
 type Settings struct {
@@ -9,10 +13,14 @@ type Settings struct {
 
 // Fields of the Settings.
 func (Settings) Fields() []ent.Field {
-	return nil
+	return []ent.Field{
+		field.Uint16("fields"),
+	}
 }
 
 // Edges of the Settings.
 func (Settings) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("requestedEndpoint", Settings.Type).Ref("requestedBy").Unique(),
+	}
 }
