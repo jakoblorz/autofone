@@ -1,3 +1,4 @@
 ent/**/*.go
 !ent/generate.go
+!ent/entc.go
 !ent/schema/**/*.go
