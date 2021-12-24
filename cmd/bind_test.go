@@ -45,7 +45,13 @@ func Test_process_writePacketToHTTP(t *testing.T) {
 				close(sig)
 			}))
 			defer serv.Close()
-			tt.p.writePacketToHTTP(&motionData, serv.URL)
+			tt.p.writePacketToHTTP(struct {
+				header packets.PacketHeader
+				raw    interface{}
+			}{
+				header: motionData.Header,
+				raw:    &motionData,
+			}, serv.URL)
 			<-sig
 		})
 	}

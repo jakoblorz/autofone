@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"unsafe"
 
@@ -62,7 +63,10 @@ for the packet ids to select.
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			stream := process(make(chan interface{}))
+			stream := process(make(chan struct {
+				header packets.PacketHeader
+				raw    interface{}
+			}))
 			go func() {
 				defer close(stream)
 				stream.readPacketsFromConn(conn, filter)
@@ -77,7 +81,10 @@ for the packet ids to select.
 	}
 )
 
-type process chan interface{}
+type process chan struct {
+	header packets.PacketHeader
+	raw    interface{}
+}
 
 func (ch process) readPacketsFromConn(conn *net.UDPConn, filter []uint) {
 
@@ -146,7 +153,14 @@ READ_UDP:
 			log.Printf("processing package: %+v", pack)
 		}
 
-		ch <- pack
+		ch <- struct {
+			header packets.PacketHeader
+			raw    interface{}
+		}{
+			header: *header,
+			raw:    pack,
+		}
+
 	}
 }
 
@@ -166,7 +180,10 @@ func (ch process) handlePackets(ctx context.Context, to string) {
 	}
 }
 
-func (process) writePacketToHTTP(pack interface{}, to string) {
+func (process) writePacketToHTTP(pack struct {
+	header packets.PacketHeader
+	raw    interface{}
+}, to string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("%+v", err)
@@ -176,7 +193,7 @@ func (process) writePacketToHTTP(pack interface{}, to string) {
 			}
 		}
 	}()
-	data, err := json.Marshal(pack)
+	data, err := json.Marshal(pack.raw)
 	if err != nil {
 		panic(err)
 	}
@@ -193,7 +210,7 @@ func (process) writePacketToHTTP(pack interface{}, to string) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", to, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", strings.ReplaceAll(to, "{{packetID}}", fmt.Sprintf("%d", pack.header.PacketID)), bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}
