@@ -1,4 +1,4 @@
-package pkg
+package pub_sub
 
 import (
 	"sync"
@@ -15,6 +15,13 @@ type SubscriptionReceiver interface {
 
 type SubscriptionNotifier interface {
 	Notify()
+}
+
+func NewReceiverNotifier() SubscriptionReceiverNotifier {
+	return &notifier{
+		RWMutex: *new(sync.RWMutex),
+		s:       make([]func(), 0),
+	}
 }
 
 type notifier struct {
