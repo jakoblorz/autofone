@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -42,6 +43,7 @@ func Test_process_writePacketToHTTP(t *testing.T) {
 				err := json.NewDecoder(r.Body).Decode(&decoded)
 				assert.NoError(t, err)
 				assert.Equal(t, motionData, decoded)
+				assert.Equal(t, "/0", r.URL.Path)
 				close(sig)
 			}))
 			defer serv.Close()
@@ -51,7 +53,7 @@ func Test_process_writePacketToHTTP(t *testing.T) {
 			}{
 				header: motionData.Header,
 				raw:    &motionData,
-			}, serv.URL)
+			}, fmt.Sprintf("%s/{{packetID}}", serv.URL))
 			<-sig
 		})
 	}
@@ -71,5 +73,5 @@ func Test_process_readPacketsFromConn(t *testing.T) {
 		stream.readPacketsFromConn(serverConn.(*net.UDPConn), []uint{uint(constants.PacketMotion)})
 		return nil
 	}, 2*time.Second))
-	assert.Equal(t, &motionData, <-stream)
+	assert.Equal(t, &motionData, (<-stream).raw)
 }
