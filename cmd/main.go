@@ -14,6 +14,9 @@ import (
 	"github.com/jakoblorz/metrikxd/state_set/session"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+
+	// In this example we use the html template engine
+	"github.com/gofiber/template/html"
 )
 
 var (
@@ -28,7 +31,33 @@ var (
 			log.DefaultLogger, _ = config.Build()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			app := fiber.New()
+			// Create a new engine by passing the template folder
+			// and template extension using <engine>.New(dir, ext string)
+			templates := html.New("./www", ".html")
+
+			// Reload the templates on each render, good for development
+			templates.Reload(true) // Optional. Default: false
+
+			// Debug will print each template that is parsed, good for debugging
+			templates.Debug(true) // Optional. Default: false
+
+			// Layout defines the variable name that is used to yield templates within layouts
+			templates.Layout("embed") // Optional. Default: "embed"
+
+			app := fiber.New(fiber.Config{
+				Views: templates,
+			})
+
+			app.Static("/", ".tailwindcss")
+
+			// To render a template, you can call the ctx.Render function
+			// Render(tmpl string, values interface{}, layout ...string)
+			app.Get("/", func(c *fiber.Ctx) error {
+				return c.Render("index", fiber.Map{
+					"Title": "Hello, World!",
+				}, "layouts/main")
+			})
+
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))
 
 			conn, err := net.ListenUDP("udp", &net.UDPAddr{
@@ -51,6 +80,8 @@ var (
 			w := pipe.WritePacketToHTTP(ctx, to, pipe.JSONEncoding, pipe.StdoutResponseHandler)
 
 			r.Then(h).Then(w)
+
+			app.Listen(":8080")
 		},
 	}
 )

@@ -1,0 +1,14 @@
+{
+  "name": "metrikxd",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:jakoblorz/f1-metrics-transformer.git",
+  "author": "Jakob Lorz <jakob@lorz.org>",
+  "license": "MIT",
+  "scripts": {
+    "tailwind:watch": "yarn tailwindcss -i ./css/styles.css -o ./.tailwindcss/styles.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.0.7"
+  }
+}

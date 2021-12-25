@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gofiber/adaptor/v2 v2.1.15
 	github.com/gofiber/fiber/v2 v2.23.0
+	github.com/gofiber/template v1.6.20
 	github.com/mailru/easyjson v0.7.7
 	github.com/masseelch/elk v0.5.2
 	github.com/spf13/cobra v1.2.1

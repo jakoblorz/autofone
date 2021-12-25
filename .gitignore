@@ -2,3 +2,6 @@ ent/**/*.go
 !ent/generate.go
 !ent/entc.go
 !ent/schema/**/*.go
+
+node_modules
+.tailwindcss

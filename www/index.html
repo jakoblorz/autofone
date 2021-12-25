@@ -1,0 +1,9 @@
+{{template "partials/navbar" .}}
+
+<form class="account-form" method="post" action="/account/login" data-controller="login">
+    <div div="account-form-title">Login</div>
+    <input type="phone" name="phone" maxlength="13" class="account-form-input" placeholder="Phone" tabindex="1">
+    <div class="account-form-field-submit ">
+        <button type="submit" class="btn btn-phone">Login</button>
+    </div>
+</form>
