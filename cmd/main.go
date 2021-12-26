@@ -9,9 +9,12 @@ import (
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/jakoblorz/metrikxd/pipe"
 	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/jakoblorz/metrikxd/state_set/session"
+	"github.com/jakoblorz/metrikxd/www"
+	"github.com/jakoblorz/metrikxd/www/partials"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -48,14 +51,15 @@ var (
 				Views: templates,
 			})
 
+			app.Use(logger.New())
+
 			app.Static("/", ".tailwindcss")
 
-			// To render a template, you can call the ctx.Render function
-			// Render(tmpl string, values interface{}, layout ...string)
 			app.Get("/", func(c *fiber.Ctx) error {
-				return c.Render("index", fiber.Map{
-					"Title": "Hello, World!",
-				}, "layouts/main")
+				return www.RenderIndexPage(c, "configuration")
+			})
+			app.Get("/configuration", func(c *fiber.Ctx) error {
+				return partials.RenderConfiguration(c)
 			})
 
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))
