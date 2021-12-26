@@ -59,7 +59,10 @@ var (
 				return www.RenderIndexPage(c, "configuration")
 			})
 			app.Get("/configuration", func(c *fiber.Ctx) error {
-				return partials.RenderConfiguration(c)
+				return partials.RenderConfigurationPage(c)
+			})
+			app.Get("/p/configuration", func(c *fiber.Ctx) error {
+				return partials.RenderConfigurationPartial(c)
 			})
 
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))
