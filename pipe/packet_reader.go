@@ -26,6 +26,8 @@ type PacketReader struct {
 }
 
 func (u *PacketReader) read(ch chan<- interface{}) {
+	defer close(ch)
+
 	for {
 		buf := make([]byte, 1024+1024/2)
 		n, err := u.Read(buf)

@@ -85,12 +85,6 @@ func (r *ReadUDPPackets) setState(u func() error) error {
 }
 
 func (r *ReadUDPPackets) Run() {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("%+v", err)
-		}
-	}()
-
 	for {
 		select {
 		case <-r.Context.Done():

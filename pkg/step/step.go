@@ -56,7 +56,11 @@ func (p *step) Process() {
 					return
 				}
 			}
-		case msg := <-p.in:
+		case msg, ok := <-p.in:
+			if !ok {
+				return
+			}
+
 			if out := p.processFunc(msg); out != nil {
 				p.out <- out
 			}
