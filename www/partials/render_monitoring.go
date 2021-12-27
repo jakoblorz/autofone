@@ -2,7 +2,7 @@ package partials
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jakoblorz/metrikxd/www"
+	"github.com/jakoblorz/metrikxd/www/layouts"
 )
 
 type RenderMonitoringSharedProps struct{}
@@ -12,26 +12,26 @@ func (r *RenderMonitoringSharedProps) AppendAdditionalProps(m fiber.Map) fiber.M
 }
 
 type renderMonitoringPartialProps struct {
-	www.PartialLayoutProps
+	layouts.PartialLayoutProps
 	RenderMonitoringSharedProps
 }
 
 func RenderMonitoringPartial(c *fiber.Ctx) error {
-	return www.RenderPartialLayout("partials/monitoring", c, &renderMonitoringPartialProps{
-		PartialLayoutProps: www.PartialLayoutProps{
+	return layouts.RenderPartialLayout("partials/monitoring", c, &renderMonitoringPartialProps{
+		PartialLayoutProps: layouts.PartialLayoutProps{
 			Slug: "monitoring",
 		},
 	})
 }
 
 type renderMonitoringPageProps struct {
-	www.MainLayoutProps
+	layouts.MainLayoutProps
 	RenderMonitoringSharedProps
 }
 
 func RenderMonitoringPage(c *fiber.Ctx) error {
-	return www.RenderMainLayout("partials/monitoring", c, &renderMonitoringPageProps{
-		MainLayoutProps: www.MainLayoutProps{
+	return layouts.RenderMainLayout("partials/monitoring", c, &renderMonitoringPageProps{
+		MainLayoutProps: layouts.MainLayoutProps{
 			Title: "Monitoring - metrikx",
 			Slug:  "monitoring",
 		},

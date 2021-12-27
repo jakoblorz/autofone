@@ -12,6 +12,35 @@
 </head>
 
 <body>
-    {{template "layouts/partial" .}}
+    <main class="w-screen h-screen px-8 text-black dark:text-white">
+        <div class="relative z-30 bg-white rounded-t-xl hover:shadow-md duration-300 my-auto xl:mt-18 dark:border-2 dark:border-gray-200/5 dark:bg-gray-800 dark:divide-gray-200/5 dark:highlight-white/10">
+            <nav class="py-4 px-4 sm:px-6 lg:px-4 xl:px-6 text-sm font-medium flex">
+                <ul class="flex space-x-3">
+                    <li class="flex text-black dark:text-gray-300">
+                        <div class="pr-1 py-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+                            </svg>
+                        </div>
+                        <div class="pl-2 pr-3 py-2 font-bold font-serif text-xl">metrix UI</div>
+                    </li>
+                </ul>
+                <!-- <ul class="flex space-x-3 ml-auto">
+                    <li><div class="px-3 py-2 rounded-md bg-blue-500 text-white cursor-pointer">New<span class="hidden sm:inline lg:hidden xl:inline"> Releases</span></div></li>
+                    <li><div class="px-3 py-2 rounded-md bg-transparent text-gray-600 cursor-pointer hover:bg-gray-50 hover:text-black dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div></li>
+                </ul> -->
+            </nav>
+        </div>
+        {{template "partials/workbench" .}}
+        <section id="main">
+            {{template "layouts/partial" .}}
+        </section>
+    </main>
+    <footer class="flex-none text-white relative mt-16 flex flex-col items-start lg:pt-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8"><p class="text-sm self-center font-semibold tracking-wide uppercase mb-4">Made with ❤️ by <a href="https://github.com/jakoblorz">Jakob</a></p></footer>
 </body>
 </html>

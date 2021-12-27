@@ -1,9 +1,12 @@
-package www
+package root
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/jakoblorz/metrikxd/www/layouts"
+)
 
 type renderIndexPageProps struct {
-	MainLayoutProps
+	layouts.MainLayoutProps
 	initialPageSlug string
 }
 
@@ -13,8 +16,8 @@ func (r *renderIndexPageProps) AppendAdditionalProps(m fiber.Map) fiber.Map {
 }
 
 func RenderIndexPage(c *fiber.Ctx, initialPageSlug string) error {
-	return RenderMainLayout("index", c, &renderIndexPageProps{
-		MainLayoutProps: MainLayoutProps{
+	return layouts.RenderMainLayout("root/index", c, &renderIndexPageProps{
+		MainLayoutProps: layouts.MainLayoutProps{
 			Title: "metrikx",
 			Slug:  initialPageSlug,
 		},

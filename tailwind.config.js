@@ -7,9 +7,12 @@ module.exports = {
     colors,
     extend: {
       fontFamily: {
+        serif: ["IBM Plex Sans", ...defaultTheme.fontFamily.serif],
         sans: ["Inter var", ...defaultTheme.fontFamily.sans],
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
 }

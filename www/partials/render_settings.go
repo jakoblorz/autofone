@@ -2,7 +2,7 @@ package partials
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jakoblorz/metrikxd/www"
+	"github.com/jakoblorz/metrikxd/www/layouts"
 )
 
 type RenderSettingsSharedProps struct{}
@@ -12,26 +12,26 @@ func (r *RenderSettingsSharedProps) AppendAdditionalProps(m fiber.Map) fiber.Map
 }
 
 type renderSettingsPartialProps struct {
-	www.PartialLayoutProps
+	layouts.PartialLayoutProps
 	RenderSettingsSharedProps
 }
 
 func RenderSettingsPartial(c *fiber.Ctx) error {
-	return www.RenderPartialLayout("partials/settings", c, &renderSettingsPartialProps{
-		PartialLayoutProps: www.PartialLayoutProps{
+	return layouts.RenderPartialLayout("partials/settings", c, &renderSettingsPartialProps{
+		PartialLayoutProps: layouts.PartialLayoutProps{
 			Slug: "settings",
 		},
 	})
 }
 
 type renderSettingsPageProps struct {
-	www.MainLayoutProps
+	layouts.MainLayoutProps
 	RenderSettingsSharedProps
 }
 
 func RenderSettingsPage(c *fiber.Ctx) error {
-	return www.RenderMainLayout("partials/settings", c, &renderSettingsPageProps{
-		MainLayoutProps: www.MainLayoutProps{
+	return layouts.RenderMainLayout("partials/settings", c, &renderSettingsPageProps{
+		MainLayoutProps: layouts.MainLayoutProps{
 			Title: "Settings - metrikx",
 			Slug:  "settings",
 		},

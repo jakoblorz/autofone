@@ -1,6 +1,9 @@
-package www
+package layouts
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/jakoblorz/metrikxd/www/rendering"
+)
 
 type RenderMainLayoutProps interface {
 	GetTitle() string
@@ -25,7 +28,7 @@ func RenderMainLayout(template string, c *fiber.Ctx, props RenderMainLayoutProps
 		"Title": props.GetTitle(),
 		"Slug":  props.GetSlug(),
 	}
-	if a, ok := props.(AdditionalPropsAppender); ok {
+	if a, ok := props.(rendering.AdditionalPropsAppender); ok {
 		p = a.AppendAdditionalProps(p)
 	}
 	return c.Render(template, p, "layouts/main")

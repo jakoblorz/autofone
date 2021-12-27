@@ -2,7 +2,7 @@ package partials
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jakoblorz/metrikxd/www"
+	"github.com/jakoblorz/metrikxd/www/layouts"
 )
 
 type RenderSendingSharedProps struct{}
@@ -12,26 +12,26 @@ func (r *RenderSendingSharedProps) AppendAdditionalProps(m fiber.Map) fiber.Map 
 }
 
 type renderSendingPartialProps struct {
-	www.PartialLayoutProps
+	layouts.PartialLayoutProps
 	RenderSendingSharedProps
 }
 
 func RenderSendingPartial(c *fiber.Ctx) error {
-	return www.RenderPartialLayout("partials/sending", c, &renderSendingPartialProps{
-		PartialLayoutProps: www.PartialLayoutProps{
+	return layouts.RenderPartialLayout("partials/sending", c, &renderSendingPartialProps{
+		PartialLayoutProps: layouts.PartialLayoutProps{
 			Slug: "sending",
 		},
 	})
 }
 
 type renderSendingPageProps struct {
-	www.MainLayoutProps
+	layouts.MainLayoutProps
 	RenderSendingSharedProps
 }
 
 func RenderSendingPage(c *fiber.Ctx) error {
-	return www.RenderMainLayout("partials/sending", c, &renderSendingPageProps{
-		MainLayoutProps: www.MainLayoutProps{
+	return layouts.RenderMainLayout("partials/sending", c, &renderSendingPageProps{
+		MainLayoutProps: layouts.MainLayoutProps{
 			Title: "Sending - metrikx",
 			Slug:  "sending",
 		},

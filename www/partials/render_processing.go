@@ -2,7 +2,7 @@ package partials
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jakoblorz/metrikxd/www"
+	"github.com/jakoblorz/metrikxd/www/layouts"
 )
 
 type RenderProcessingSharedProps struct{}
@@ -12,26 +12,26 @@ func (r *RenderProcessingSharedProps) AppendAdditionalProps(m fiber.Map) fiber.M
 }
 
 type renderProcessingPartialProps struct {
-	www.PartialLayoutProps
+	layouts.PartialLayoutProps
 	RenderProcessingSharedProps
 }
 
 func RenderProcessingPartial(c *fiber.Ctx) error {
-	return www.RenderPartialLayout("partials/processing", c, &renderProcessingPartialProps{
-		PartialLayoutProps: www.PartialLayoutProps{
+	return layouts.RenderPartialLayout("partials/processing", c, &renderProcessingPartialProps{
+		PartialLayoutProps: layouts.PartialLayoutProps{
 			Slug: "processing",
 		},
 	})
 }
 
 type renderProcessingPageProps struct {
-	www.MainLayoutProps
+	layouts.MainLayoutProps
 	RenderProcessingSharedProps
 }
 
 func RenderProcessingPage(c *fiber.Ctx) error {
-	return www.RenderMainLayout("partials/processing", c, &renderProcessingPageProps{
-		MainLayoutProps: www.MainLayoutProps{
+	return layouts.RenderMainLayout("partials/processing", c, &renderProcessingPageProps{
+		MainLayoutProps: layouts.MainLayoutProps{
 			Title: "Processing - metrikx",
 			Slug:  "processing",
 		},

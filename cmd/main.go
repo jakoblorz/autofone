@@ -3,18 +3,17 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/jakoblorz/metrikxd/modules"
 	"github.com/jakoblorz/metrikxd/pipe"
 	"github.com/jakoblorz/metrikxd/pkg/log"
-	"github.com/jakoblorz/metrikxd/state_set/session"
 	"github.com/jakoblorz/metrikxd/www"
-	"github.com/jakoblorz/metrikxd/www/partials"
+	"github.com/jakoblorz/metrikxd/www/root"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -42,10 +41,7 @@ var (
 			templates.Reload(true) // Optional. Default: false
 
 			// Debug will print each template that is parsed, good for debugging
-			templates.Debug(true) // Optional. Default: false
-
-			// Layout defines the variable name that is used to yield templates within layouts
-			templates.Layout("embed") // Optional. Default: "embed"
+			templates.Debug(true) // Optional. Default: falseß
 
 			app := fiber.New(fiber.Config{
 				Views: templates,
@@ -56,63 +52,43 @@ var (
 			app.Static("/", ".tailwindcss")
 
 			app.Get("/", func(c *fiber.Ctx) error {
-				return www.RenderIndexPage(c, "f1-game")
+				return root.RenderIndexPage(c, "f1-game")
 			})
 
-			app.Get("/settings", func(c *fiber.Ctx) error {
-				return partials.RenderSettingsPage(c)
-			})
-			app.Get("/f1-game", func(c *fiber.Ctx) error {
-				return partials.RenderF1GamePage(c)
-			})
-			app.Get("/processing", func(c *fiber.Ctx) error {
-				return partials.RenderProcessingPage(c)
-			})
-			app.Get("/monitoring", func(c *fiber.Ctx) error {
-				return partials.RenderMonitoringPage(c)
-			})
-			app.Get("/sending", func(c *fiber.Ctx) error {
-				return partials.RenderSendingPage(c)
-			})
-
-			app.Get("/p/settings", func(c *fiber.Ctx) error {
-				return partials.RenderSettingsPartial(c)
-			})
-			app.Get("/p/f1-game", func(c *fiber.Ctx) error {
-				return partials.RenderF1GamePartial(c)
-			})
-			app.Get("/p/processing", func(c *fiber.Ctx) error {
-				return partials.RenderProcessingPartial(c)
-			})
-			app.Get("/p/monitoring", func(c *fiber.Ctx) error {
-				return partials.RenderMonitoringPartial(c)
-			})
-			app.Get("/p/sending", func(c *fiber.Ctx) error {
-				return partials.RenderSendingPartial(c)
-			})
+			for _, p := range www.Pages {
+				p.Mount(app)
+			}
 
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))
-
-			conn, err := net.ListenUDP("udp", &net.UDPAddr{
-				IP:   net.ParseIP("localhost"),
-				Port: port,
-			})
-			if err != nil {
-				log.Printf("%+v", err)
-				return
-			}
-			defer conn.Close()
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			r := pipe.ReadUDPPackets(ctx, conn, &pipe.PacketReaderOptions{})
-			h := pipe.HandleEvents(ctx, pipe.EventHandler{
-				OnLobbyInformationPacket: session.Instance.OnLobbyInfoDataReceived,
-			})
-			w := pipe.WritePacketToHTTP(ctx, to, pipe.JSONEncoding, pipe.StdoutResponseHandler)
+			r := modules.NewUDPPacketReader(ctx, "localhost", 20777, &pipe.PacketReaderOptions{})
+			r.Mount(app)
 
-			r.Then(h).Then(w)
+			go r.Run()
+
+			// conn, err := net.ListenUDP("udp", &net.UDPAddr{
+			// 	IP:   net.ParseIP("localhost"),
+			// 	Port: port,
+			// })
+			// if err != nil {
+			// 	log.Printf("%+v", err)
+			// 	return
+			// }
+			// defer conn.Close()
+
+			// ctx, cancel := context.WithCancel(context.Background())
+			// defer cancel()
+
+			// r := pipe.ReadUDPPackets(ctx, conn, &pipe.PacketReaderOptions{})
+			// h := pipe.HandleEvents(ctx, pipe.EventHandler{
+			// 	OnLobbyInformationPacket: session.Instance.OnLobbyInfoDataReceived,
+			// })
+			// w := pipe.WritePacketToHTTP(ctx, to, pipe.JSONEncoding, pipe.StdoutResponseHandler)
+
+			// r.Then(h).Then(w)
 
 			app.Listen(":8080")
 		},
