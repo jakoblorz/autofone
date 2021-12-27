@@ -61,8 +61,20 @@ var (
 			app.Get("/configuration", func(c *fiber.Ctx) error {
 				return partials.RenderConfigurationPage(c)
 			})
+			app.Get("/f1-game", func(c *fiber.Ctx) error {
+				return partials.RenderF1GamePage(c)
+			})
+			app.Get("/sending", func(c *fiber.Ctx) error {
+				return partials.RenderSendingPage(c)
+			})
 			app.Get("/p/configuration", func(c *fiber.Ctx) error {
 				return partials.RenderConfigurationPartial(c)
+			})
+			app.Get("/p/f1-game", func(c *fiber.Ctx) error {
+				return partials.RenderF1GamePartial(c)
+			})
+			app.Get("/p/sending", func(c *fiber.Ctx) error {
+				return partials.RenderSendingPartial(c)
 			})
 
 			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))

@@ -1,5 +1,5 @@
-<div id="header">
-    <div class="relative z-10 bg-white rounded-xl shadow-md hover:shadow-xl duration-300 ring-1 ring-gray-900/5 divide-y divide-gray-100 my-auto xl:mt-18 dark:border-2 dark:border-gray-200/5 dark:bg-gray-800 dark:divide-gray-200/5 dark:highlight-white/10">
+<main class="w-screen h-screen px-8">
+    <div class="relative z-30 bg-white rounded-t-xl hover:shadow-md duration-300 divide-y divide-gray-100 my-auto xl:mt-18 dark:border-2 dark:border-gray-200/5 dark:bg-gray-800 dark:divide-gray-200/5 dark:highlight-white/10">
         <nav class="py-4 px-4 sm:px-6 lg:px-4 xl:px-6 text-sm font-medium flex">
             <ul class="flex space-x-3">
                 <li class="flex text-black dark:text-gray-300">
@@ -10,9 +10,6 @@
                     </div>
                     <div class="pl-2 pr-3 py-2">metrix UI</div>
                 </li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "configuration"}}bg-blue-500 text-white{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/configuration">Config<span class="hidden sm:inline lg:hidden xl:inline">uration</span></div></li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "configuration"}}bg-blue-500 text-white{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">Top<span class="hidden sm:inline"> Rated</span></div></li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "configuration"}}bg-blue-500 text-white{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">Vincent’s Picks</div></li>
             </ul>
             <ul class="flex space-x-3 ml-auto">
                 <li><div class="px-3 py-2 rounded-md bg-blue-500 text-white cursor-pointer">New<span class="hidden sm:inline lg:hidden xl:inline"> Releases</span></div></li>
@@ -25,5 +22,33 @@
             </ul>
         </nav>
     </div>
-</div>
-<div class="main">{{embed}}</div>
+    <section class="bg-white z-20 hover:shadow-md duration-300 px-4 py-2 ring-1 ring-gray-900/5 ">
+        <div class="workbench rounded-lg shadow-inner h-96 ring-1 ring-gray-900/5"></div>
+    </section>
+    <div class="main z-10 flex h-fit m-auto shadow-md hover:shadow-xl duration-300 ring-1 ring-gray-900/5 ">
+        <section class="flex-grow bg-white py-4 px-4 sm:px-6 lg:px-4 rounded-bl-xl shadow-md dark:border-2 dark:border-gray-200/5 dark:bg-gray-800">
+            {{embed}}
+        </section>
+        <aside class="min-w-max backdrop-blur-sm bg-white/30 rounded-br-xl">
+            <ul class="flex flex-col space-y-3 min-w-full flex-grow">
+                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "f1-game"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/f1-game">F1 Game</div></li>
+                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "processing"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/processing">Processing</div></li>
+                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "monitoring"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/monitoring">Monitoring</div></li>
+                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "sending"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/sending">Sending</div></li>
+            </ul>
+            <ul class="flex flex-col space-y-3">
+                <li><div class="px-3 py-2 rounded-md bg-blue-500 text-white cursor-pointer">New<span class="hidden sm:inline lg:hidden xl:inline"> Releases</span></div></li>
+                <li><div class="px-3 py-2 rounded-md bg-transparent text-gray-600 cursor-pointer hover:bg-gray-50 hover:text-black dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">
+                    <div class="pr-1 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <div class="pl-2 pr-3 py-2">Config<span class="hidden sm:inline lg:hidden xl:inline">uration</div>
+                </div></li>
+            </ul>
+        </aside>
+    </div>
+</main>
+<footer class="flex-none text-white relative mt-16 flex flex-col items-start lg:pt-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8"><p class="text-sm self-center font-semibold tracking-wide uppercase mb-4">Made with ❤️ by <a href="https://github.com/jakoblorz">Jakob</a></p></footer>
