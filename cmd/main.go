@@ -56,22 +56,36 @@ var (
 			app.Static("/", ".tailwindcss")
 
 			app.Get("/", func(c *fiber.Ctx) error {
-				return www.RenderIndexPage(c, "configuration")
+				return www.RenderIndexPage(c, "f1-game")
 			})
-			app.Get("/configuration", func(c *fiber.Ctx) error {
-				return partials.RenderConfigurationPage(c)
+
+			app.Get("/settings", func(c *fiber.Ctx) error {
+				return partials.RenderSettingsPage(c)
 			})
 			app.Get("/f1-game", func(c *fiber.Ctx) error {
 				return partials.RenderF1GamePage(c)
 			})
+			app.Get("/processing", func(c *fiber.Ctx) error {
+				return partials.RenderProcessingPage(c)
+			})
+			app.Get("/monitoring", func(c *fiber.Ctx) error {
+				return partials.RenderMonitoringPage(c)
+			})
 			app.Get("/sending", func(c *fiber.Ctx) error {
 				return partials.RenderSendingPage(c)
 			})
-			app.Get("/p/configuration", func(c *fiber.Ctx) error {
-				return partials.RenderConfigurationPartial(c)
+
+			app.Get("/p/settings", func(c *fiber.Ctx) error {
+				return partials.RenderSettingsPartial(c)
 			})
 			app.Get("/p/f1-game", func(c *fiber.Ctx) error {
 				return partials.RenderF1GamePartial(c)
+			})
+			app.Get("/p/processing", func(c *fiber.Ctx) error {
+				return partials.RenderProcessingPartial(c)
+			})
+			app.Get("/p/monitoring", func(c *fiber.Ctx) error {
+				return partials.RenderMonitoringPartial(c)
 			})
 			app.Get("/p/sending", func(c *fiber.Ctx) error {
 				return partials.RenderSendingPartial(c)

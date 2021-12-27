@@ -29,23 +29,23 @@
         <section class="flex-grow bg-white py-4 px-4 sm:px-6 lg:px-4 rounded-bl-xl shadow-md dark:border-2 dark:border-gray-200/5 dark:bg-gray-800">
             {{embed}}
         </section>
-        <aside class="min-w-max backdrop-blur-sm bg-white/30 rounded-br-xl">
+        <aside class="min-w-96 backdrop-blur-sm bg-white/30 rounded-br-xl pt-3">
             <ul class="flex flex-col space-y-3 min-w-full flex-grow">
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "f1-game"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/f1-game">F1 Game</div></li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "processing"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/processing">Processing</div></li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "monitoring"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/monitoring">Monitoring</div></li>
-                <li><div class="px-3 py-2 rounded-md cursor-pointer {{if eq .Slug "sending"}}bg-white first:rounded-t-none last:rounded-b-none rounded-r-xl{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/sending">Sending</div></li>
+                <li><a href="/f1-game"><div class="px-3 py-2 rounded-r-xl cursor-pointer {{if eq .Slug "f1-game"}}bg-white hover:list-item-active{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/f1-game">F1 Game</div></a></li>
+                <li><a href="/processing"><div class="px-3 py-2 rounded-r-xl cursor-pointer {{if eq .Slug "processing"}}bg-white hover:list-item-active{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/processing">Processing</div></a></li>
+                <li><a href="/monitoring"><div class="px-3 py-2 rounded-r-xl cursor-pointer {{if eq .Slug "monitoring"}}bg-white hover:list-item-active{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/monitoring">Monitoring</div></a></li>
+                <li><a href="/sending"><div class="px-3 py-2 rounded-r-xl cursor-pointer {{if eq .Slug "sending"}}bg-white hover:list-item-active{{end}} dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700" x-get="/p/sending">Sending</div></a></li>
             </ul>
             <ul class="flex flex-col space-y-3">
                 <li><div class="px-3 py-2 rounded-md bg-blue-500 text-white cursor-pointer">New<span class="hidden sm:inline lg:hidden xl:inline"> Releases</span></div></li>
-                <li><div class="px-3 py-2 rounded-md bg-transparent text-gray-600 cursor-pointer hover:bg-gray-50 hover:text-black dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">
+                <li><div class="flex px-3 py-2 rounded-md bg-transparent text-gray-600 cursor-pointer hover:bg-gray-50 hover:text-black dark:bg-transparent dark:text-gray-300 dark:ring-1 dark:ring-gray-700">
                     <div class="pr-1 py-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </div>
-                    <div class="pl-2 pr-3 py-2">Config<span class="hidden sm:inline lg:hidden xl:inline">uration</div>
+                    <div class="pl-2 pr-3 py-2">Settings</div>
                 </div></li>
             </ul>
         </aside>
