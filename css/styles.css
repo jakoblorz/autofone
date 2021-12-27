@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    @apply min-h-screen bg-gradient-to-br from-blue-600 to-indigo-800 pt-2 sm:pt-5 md:pt-10;
+    @apply min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 pt-2 sm:pt-5 md:pt-10;
     min-width: 100vw;
 }
 
