@@ -4,14 +4,35 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/jakoblorz/metrikxd/constants"
 	"github.com/jakoblorz/metrikxd/pipe"
 	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/jakoblorz/metrikxd/pkg/step"
 	"github.com/jakoblorz/metrikxd/www"
 	"github.com/jakoblorz/metrikxd/www/partials"
 )
+
+func uint8ToSPF(p uint8, name string) partials.SinglePacketFilter {
+	return partials.SinglePacketFilter{fmt.Sprintf("packet-%d", p), fmt.Sprintf("packet_%s", strings.ReplaceAll(strings.ToLower(name), " ", "_")), fmt.Sprintf("Packet %d (%s)", p, name)}
+}
+
+var PacketFilters = []partials.SinglePacketFilter{
+	uint8ToSPF(constants.PacketMotion, "Motion"),
+	uint8ToSPF(constants.PacketSession, "Session"),
+	uint8ToSPF(constants.PacketLap, "Lap"),
+	uint8ToSPF(constants.PacketEvent, "Event"),
+	uint8ToSPF(constants.PacketParticipants, "Participants"),
+	uint8ToSPF(constants.PacketCarSetup, "Car Setup"),
+	uint8ToSPF(constants.PacketCarTelemetry, "Car Telemetry"),
+	uint8ToSPF(constants.PacketCarStatus, "Car Status"),
+	uint8ToSPF(constants.PacketFinalClassification, "Final Classification"),
+	uint8ToSPF(constants.PacketLobbyInfo, "Lobby Information"),
+	uint8ToSPF(constants.PacketCarDamage, "Car Damage"),
+	uint8ToSPF(constants.PacketSessionHistory, "Session History"),
+}
 
 type ReadUDPPackets struct {
 	context.Context
@@ -36,32 +57,46 @@ func NewUDPPacketReader(ctx context.Context, host string, port int, initialOptio
 		Host: host,
 		Port: port,
 	}
-	p.Page = www.Page{"f1-game", p.renderF1GamePage, p.renderF1GamePartial, www.EmptySSEHandler}
+	p.Page = www.Page{"game-setup", p.renderF1GamePage, p.renderF1GamePartial, www.EmptySSEHandler}
 	return p
 }
 
-func (r *ReadUDPPackets) getSharedProps() partials.RenderF1GameSharedProps {
-	return partials.RenderF1GameSharedProps{
-		Host: r.Host,
-		Port: r.Port,
+func (r *ReadUDPPackets) getSharedProps() partials.RenderGameSetupSharedProps {
+	return partials.RenderGameSetupSharedProps{
+		Host:    r.Host,
+		Port:    r.Port,
+		Packets: PacketFilters,
 	}
 }
 
 func (r *ReadUDPPackets) renderF1GamePage(c *fiber.Ctx) error {
-	return partials.RenderF1GamePage(c, r.getSharedProps())
+	return partials.RenderGameSetupPage(c, r.getSharedProps())
 }
 
 func (r *ReadUDPPackets) renderF1GamePartial(c *fiber.Ctx) error {
-	return partials.RenderF1GamePartial(c, r.getSharedProps())
+	return partials.RenderGameSetupPartial(c, r.getSharedProps())
 }
 
-type HostPortUpdateRequest struct {
+type UpdateUDPReaderRequest struct {
 	Host string `form:"host"`
 	Port int    `form:"port"`
+
+	PacketMotion              string `form:"packet_motion"`
+	PacketSession             string `form:"packet_session"`
+	PacketLap                 string `form:"packet_lap"`
+	PacketEvent               string `form:"packet_event"`
+	PacketParticipants        string `form:"packet_participants"`
+	PacketCarSetup            string `form:"packet_car_setup"`
+	PacketCarTelemetry        string `form:"packet_car_telemetry"`
+	PacketCarStatus           string `form:"packet_car_status"`
+	PacketFinalClassification string `form:"packet_final_classification"`
+	PacketLobbyInfo           string `form:"packet_lobby_info"`
+	PacketCarDamage           string `form:"packet_car_damage"`
+	PacketSessionHistory      string `form:"packet_session_history"`
 }
 
-func (r *ReadUDPPackets) updateHostPort(c *fiber.Ctx) error {
-	d := new(HostPortUpdateRequest)
+func (r *ReadUDPPackets) updateUDPReader(c *fiber.Ctx) error {
+	d := new(UpdateUDPReaderRequest)
 	if err := c.BodyParser(d); err != nil {
 		log.Printf("%+v", err)
 		return c.Redirect(r.Page.Slug)
@@ -71,12 +106,12 @@ func (r *ReadUDPPackets) updateHostPort(c *fiber.Ctx) error {
 		r.Port = d.Port
 		return nil
 	})
-	return partials.RenderF1GamePage(c, r.getSharedProps())
+	return partials.RenderGameSetupPage(c, r.getSharedProps())
 }
 
 func (r *ReadUDPPackets) Mount(app *fiber.App) {
 	r.Page.Mount(app)
-	app.Post(fmt.Sprintf("/%s", r.Page.Slug), r.updateHostPort)
+	app.Post(fmt.Sprintf("/%s", r.Page.Slug), r.updateUDPReader)
 }
 
 func (r *ReadUDPPackets) setState(u func() error) error {

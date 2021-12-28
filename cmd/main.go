@@ -52,7 +52,7 @@ var (
 			app.Static("/", ".tailwindcss")
 
 			app.Get("/", func(c *fiber.Ctx) error {
-				return root.RenderIndexPage(c, "f1-game")
+				return root.RenderIndexPage(c, "game-setup")
 			})
 
 			for _, p := range www.Pages {

@@ -1,6 +1,6 @@
-<section class="z-10 flex flex-grow m-auto shadow-md hover:shadow-xl duration-300" hx-sse="connect:/{{.Slug}}/sse">
+<section class="z-10 flex flex-grow m-auto rounded-b-xl shadow-md hover:shadow-xl duration-300" hx-sse="connect:/{{.Slug}}/sse">
     <div hx-trigger="sse:rerender" hx-get="/{{.Slug}}" hx-target="body" hx-swap="outerHTML"></div>
-    <div class="flex-grow bg-white py-4 px-4 sm:px-6 lg:px-4 rounded-b-xl shadow-md dark:bg-gray-800 dark:text-white">
+    <div class="flex-grow">
         {{embed}}
     </div>
 </section>

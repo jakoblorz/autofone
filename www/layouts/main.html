@@ -15,15 +15,17 @@
     <main class="w-screen h-screen px-8 text-black dark:text-white">
         <div class="relative z-30 bg-white rounded-t-xl my-auto xl:mt-18 dark:bg-gray-800 dark:divide-gray-200/5 dark:highlight-white/10">
             <nav class="py-4 px-4 sm:px-6 lg:px-4 xl:px-6 text-sm font-medium flex flex-row items-center justify-between">
-                <ul class="flex space-x-3">
+                <ul class="flex space-x-2">
                     <li class="flex text-black dark:text-gray-300">
                         <div class="pr-1 py-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
                             </svg>
                         </div>
-                        <div class="pl-2 pr-3 py-2 font-bold font-serif text-xl">metrix UI</div>
+                        <div class="pl-2 pr-3 my-1 py-1 font-bold font-serif text-xl hover:bg-gray-50 rounded-md cursor-pointer duration-150">metrix UI</div>
                     </li>
+                    <li class="flex text-gray-300 dark:text-gray-300 py-2 text-xl">/</li>
+                    <li class="flex text-gray-300 dark:text-gray-300 my-1 py-1 mx-1 px-2 text-xl hover:bg-gray-50 hover:text-black rounded-md cursor-pointer duration-150">{{.Slug}}</li>
                 </ul>
                 <div class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px mx-auto">
                     <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-xl border border-gray-300 bg-white text-sm font-medium text-status-green hover:bg-gray-50">
