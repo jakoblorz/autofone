@@ -95,7 +95,7 @@ func TestPacketReader_read(t *testing.T) {
 	assert.NoError(t, udptest.NewConn(func(clientConn, serverConn net.Conn) error {
 		clientCh <- clientConn
 		reader := ReadUDPPackets(ctx, serverConn, &PacketReaderOptions{
-			Filter: []uint{uint(constants.PacketMotion)},
+			Filter: []uint8{constants.PacketMotion},
 		})
 		go reader.Process()
 		received = <-reader.Out()

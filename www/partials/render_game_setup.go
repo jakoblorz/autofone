@@ -8,6 +8,7 @@ import (
 type SinglePacketFilter struct {
 	Id      string
 	Name    string
+	Value   bool
 	Content string
 }
 

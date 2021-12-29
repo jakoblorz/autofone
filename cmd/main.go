@@ -41,7 +41,7 @@ var (
 			templates.Reload(true) // Optional. Default: false
 
 			// Debug will print each template that is parsed, good for debugging
-			templates.Debug(true) // Optional. Default: falseß
+			templates.Debug(true) // Optional. Default: false
 
 			app := fiber.New(fiber.Config{
 				Views: templates,
@@ -67,7 +67,15 @@ var (
 			r := modules.NewUDPPacketReader(ctx, "localhost", 20777, &pipe.PacketReaderOptions{})
 			r.Mount(app)
 
+			h := pipe.HandleEvents(ctx, pipe.EventHandler{})
+			w := modules.NewHTTPPacketWriter(ctx, "localhost:8080/api/ingest/{{id}}")
+			w.Mount(app)
+
 			go r.Run()
+			go h.Process()
+			go w.Run()
+
+			// r.Then(h).Then(w.Step())
 
 			// conn, err := net.ListenUDP("udp", &net.UDPAddr{
 			// 	IP:   net.ParseIP("localhost"),

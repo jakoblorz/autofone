@@ -20,7 +20,7 @@ type PacketReader struct {
 	step.Step
 	io.Reader
 
-	filter    []uint
+	filter    []uint8
 	logBytes  bool
 	logStruct bool
 }
@@ -97,9 +97,23 @@ func (u *PacketReader) read(ch chan<- interface{}) {
 }
 
 type PacketReaderOptions struct {
-	Filter           []uint
+	Filter           []uint8
 	LogIncomingBytes bool
 	LogDecodedStruct bool
+}
+
+func (p *PacketReaderOptions) Len() int {
+	return len(p.Filter)
+}
+
+func (p *PacketReaderOptions) Swap(i, j int) {
+	jv := p.Filter[j]
+	p.Filter[j] = p.Filter[i]
+	p.Filter[i] = jv
+}
+
+func (p *PacketReaderOptions) Less(i, j int) bool {
+	return p.Filter[i] <= p.Filter[j]
 }
 
 func ReadUDPPackets(ctx context.Context, conn net.Conn, opts *PacketReaderOptions) *PacketReader {

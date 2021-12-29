@@ -1,6 +1,6 @@
 <section class="z-10 flex flex-grow m-auto rounded-b-xl shadow-md hover:shadow-xl duration-300" hx-sse="connect:/{{.Slug}}/sse">
     <div hx-trigger="sse:rerender" hx-get="/{{.Slug}}" hx-target="body" hx-swap="outerHTML"></div>
-    <div class="flex-grow">
+    <form method="post" action="/{{.Slug}}" class="flex-grow">
         {{embed}}
     </div>
 </section>

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,10 +18,10 @@ import (
 )
 
 func uint8ToSPF(p uint8, name string) partials.SinglePacketFilter {
-	return partials.SinglePacketFilter{fmt.Sprintf("packet-%d", p), fmt.Sprintf("packet_%s", strings.ReplaceAll(strings.ToLower(name), " ", "_")), fmt.Sprintf("Packet %d (%s)", p, name)}
+	return partials.SinglePacketFilter{fmt.Sprintf("packet-%d", p), fmt.Sprintf("packet_%s", strings.ReplaceAll(strings.ToLower(name), " ", "_")), false, fmt.Sprintf("Packet %d (%s)", p, name)}
 }
 
-var PacketFilters = []partials.SinglePacketFilter{
+var packetFilters = []partials.SinglePacketFilter{
 	uint8ToSPF(constants.PacketMotion, "Motion"),
 	uint8ToSPF(constants.PacketSession, "Session"),
 	uint8ToSPF(constants.PacketLap, "Lap"),
@@ -32,6 +34,14 @@ var PacketFilters = []partials.SinglePacketFilter{
 	uint8ToSPF(constants.PacketLobbyInfo, "Lobby Information"),
 	uint8ToSPF(constants.PacketCarDamage, "Car Damage"),
 	uint8ToSPF(constants.PacketSessionHistory, "Session History"),
+}
+
+func getOnOffState(options *pipe.PacketReaderOptions) []partials.SinglePacketFilter {
+	filters := packetFilters
+	for _, id := range options.Filter {
+		filters[id].Value = true
+	}
+	return filters
 }
 
 type ReadUDPPackets struct {
@@ -57,15 +67,17 @@ func NewUDPPacketReader(ctx context.Context, host string, port int, initialOptio
 		Host: host,
 		Port: port,
 	}
+	sort.Sort(initialOptions)
 	p.Page = www.Page{"game-setup", p.renderF1GamePage, p.renderF1GamePartial, www.EmptySSEHandler}
 	return p
 }
 
 func (r *ReadUDPPackets) getSharedProps() partials.RenderGameSetupSharedProps {
+
 	return partials.RenderGameSetupSharedProps{
 		Host:    r.Host,
 		Port:    r.Port,
-		Packets: PacketFilters,
+		Packets: getOnOffState(r.options),
 	}
 }
 
@@ -95,17 +107,66 @@ type UpdateUDPReaderRequest struct {
 	PacketSessionHistory      string `form:"packet_session_history"`
 }
 
+func (u *UpdateUDPReaderRequest) ToFilter() (values []uint8) {
+	values = make([]uint8, 0)
+	if len(u.PacketMotion) > 0 {
+		values = append(values, constants.PacketMotion)
+	}
+	if len(u.PacketSession) > 0 {
+		values = append(values, constants.PacketSession)
+	}
+	if len(u.PacketLap) > 0 {
+		values = append(values, constants.PacketLap)
+	}
+	if len(u.PacketEvent) > 0 {
+		values = append(values, constants.PacketEvent)
+	}
+	if len(u.PacketParticipants) > 0 {
+		values = append(values, constants.PacketParticipants)
+	}
+	if len(u.PacketCarSetup) > 0 {
+		values = append(values, constants.PacketCarSetup)
+	}
+	if len(u.PacketCarTelemetry) > 0 {
+		values = append(values, constants.PacketCarTelemetry)
+	}
+	if len(u.PacketCarStatus) > 0 {
+		values = append(values, constants.PacketCarStatus)
+	}
+	if len(u.PacketFinalClassification) > 0 {
+		values = append(values, constants.PacketFinalClassification)
+	}
+	if len(u.PacketLobbyInfo) > 0 {
+		values = append(values, constants.PacketLobbyInfo)
+	}
+	if len(u.PacketCarDamage) > 0 {
+		values = append(values, constants.PacketCarDamage)
+	}
+	if len(u.PacketSessionHistory) > 0 {
+		values = append(values, constants.PacketSessionHistory)
+	}
+	return
+}
+
 func (r *ReadUDPPackets) updateUDPReader(c *fiber.Ctx) error {
 	d := new(UpdateUDPReaderRequest)
 	if err := c.BodyParser(d); err != nil {
 		log.Printf("%+v", err)
 		return c.Redirect(r.Page.Slug)
 	}
-	r.setState(func() error {
-		r.Host = d.Host
-		r.Port = d.Port
-		return nil
-	})
+
+	filter := d.ToFilter()
+	updateHostPort := r.Host != d.Host || r.Port != d.Port
+	if updateHostPort || !reflect.DeepEqual(r.options.Filter, filter) {
+		r.setState(func() error {
+			if updateHostPort {
+				r.Host = d.Host
+				r.Port = d.Port
+			}
+			r.options.Filter = filter
+			return nil
+		})
+	}
 	return partials.RenderGameSetupPage(c, r.getSharedProps())
 }
 

@@ -25,7 +25,7 @@ func TestPacketJSONHTTPWriter_handle(t *testing.T) {
 	}))
 	defer serv.Close()
 
-	writer := WritePacketToHTTP(ctx, serv.URL, JSONEncoding, StdoutResponseHandler)
+	writer := WritePacketToHTTP(ctx, PlainStringer(serv.URL), JSONEncoding, StdoutResponseHandler)
 
 	writeCh := make(chan interface{})
 	writer.ReadFrom(writeCh)

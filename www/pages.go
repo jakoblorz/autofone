@@ -13,7 +13,7 @@ var Pages = []Page{
 	{"settings", partials.RenderSettingsPage, partials.RenderSettingsPartial, EmptySSEHandler},
 	{"processing", partials.RenderProcessingPage, partials.RenderProcessingPartial, EmptySSEHandler},
 	{"monitoring", partials.RenderMonitoringPage, partials.RenderMonitoringPartial, EmptySSEHandler},
-	{"sending", partials.RenderSendingPage, partials.RenderSendingPartial, EmptySSEHandler},
+	// {"sending", partials.RenderSendingPage, partials.RenderSendingPartial, EmptySSEHandler},
 	{"workbench", nil, partials.RenderWorkbenchPartial, EmptySSEHandler},
 }
 

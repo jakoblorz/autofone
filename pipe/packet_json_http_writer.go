@@ -14,6 +14,16 @@ import (
 	"github.com/jakoblorz/metrikxd/pkg/step"
 )
 
+type Stringer interface {
+	String() string
+}
+
+type PlainStringer string
+
+func (p PlainStringer) String() string {
+	return string(p)
+}
+
 type HTTPEncoding string
 
 const (
@@ -32,7 +42,7 @@ var (
 	}
 )
 
-func WritePacketToHTTP(ctx context.Context, to string, encoding HTTPEncoding, responseHandler HTTPResponseHandler) step.Step {
+func WritePacketToHTTP(ctx context.Context, to Stringer, encoding HTTPEncoding, responseHandler HTTPResponseHandler) step.Step {
 	switch encoding {
 	case JSONEncoding:
 		p := &PacketJSONHTTPWriter{
@@ -54,7 +64,7 @@ type PacketJSONHTTPWriter struct {
 	step.Step
 	sync.Pool
 
-	to             string
+	to             Stringer
 	handleResponse HTTPResponseHandler
 }
 
@@ -81,7 +91,7 @@ func (u *PacketJSONHTTPWriter) handle(pack interface{}) interface{} {
 		panic(err)
 	}
 
-	req, err := http.NewRequest("POST", u.to, bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", u.to.String(), bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}
