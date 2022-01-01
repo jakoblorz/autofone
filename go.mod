@@ -13,5 +13,6 @@ require (
 	github.com/masseelch/elk v0.5.2
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
+	github.com/webview/webview v0.0.0-20210330151455-f540d88dde4e
 	go.uber.org/zap v1.19.1
 )

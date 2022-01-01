@@ -1,36 +1,25 @@
 <div class="py-4 pb-8 px-4 sm:px-6 lg:px-4 bg-white shadow-md dark:bg-gray-800 dark:text-white">
     <h1>Sending</h1>
     <div class="flex flex-col sm:flex-row sm:space-x-12 space-y-6 sm:space-y-0 items-stretch justify-items-start">
-        <section class="">
-            <h4>Packet Filter</h4>
-            <div class="flex flex-col sm:flex-row sm:space-x-6 space-y-6 sm:space-y-0">
-                <div class="space-y-6">
-                    {{range $i, $p := .Packets}}{{if and (lt $i 4) (ge $i 0) }}{{template "components/form-checkbox" $p}}{{end}}{{end}}
-                </div>
-
-                <div class="space-y-6">
-                    {{range $i, $p := .Packets}}{{if and (lt $i 8) (ge $i 4) }}{{template "components/form-checkbox" $p}}{{end}}{{end}}
-                </div>
-
-                <div class="space-y-6">
-                    {{range $i, $p := .Packets}}{{if and (lt $i 12) (ge $i 8) }}{{template "components/form-checkbox" $p}}{{end}}{{end}}
-                </div>
-            </div>
-        </section>
-
         <section>
             <h4>Networking Settings</h4>
             <div  class="flex flex-col sm:flex-row sm:space-x-6">
                 <div>
                     <label for="host" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Host</label>
                     <div class="mt-1 relative rounded-md shadow-sm text-black">
-                        <input type="text" name="host" id="host" value="{{.Host}}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 sm:text-sm border-gray-300 rounded-md" placeholder="localhost">
+                        <input type="text" name="host" id="host" value="{{.Host}}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 sm:text-sm border-gray-300 rounded-md" placeholder="matri-x.de">
                     </div>
                 </div>
                 <div>
                     <label for="port" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Port</label>
                     <div class="mt-1 relative rounded-md shadow-sm text-black">
-                        <input type="number" name="port" id="port" value="{{.Port}}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 sm:text-sm border-gray-300 rounded-md" placeholder="20777">
+                        <input type="number" name="port" id="port" value="{{.Port}}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 sm:text-sm border-gray-300 rounded-md" placeholder="">
+                    </div>
+                </div>
+                <div>
+                    <label for="template_string" class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL</label>
+                    <div class="mt-1 relative rounded-md shadow-sm text-black">
+                        <input type="text" name="template_string" id="template_string" value="{{.TemplateString}}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 sm:text-sm border-gray-300 rounded-md" placeholder="{{`api/udp/{{packetID}}`}}">
                     </div>
                 </div>
             </div>

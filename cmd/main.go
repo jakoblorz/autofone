@@ -15,6 +15,7 @@ import (
 	"github.com/jakoblorz/metrikxd/www"
 	"github.com/jakoblorz/metrikxd/www/root"
 	"github.com/spf13/cobra"
+	"github.com/webview/webview"
 	"go.uber.org/zap"
 
 	// In this example we use the html template engine
@@ -68,7 +69,7 @@ var (
 			r.Mount(app)
 
 			h := pipe.HandleEvents(ctx, pipe.EventHandler{})
-			w := modules.NewHTTPPacketWriter(ctx, "localhost:8080/api/ingest/{{id}}")
+			w := modules.NewHTTPPacketWriter(ctx, "api/udp/{{packetID}}")
 			w.Mount(app)
 
 			go r.Run()
@@ -98,7 +99,14 @@ var (
 
 			// r.Then(h).Then(w)
 
-			app.Listen(":8080")
+			go app.Listen(":8080")
+
+			view := webview.New(true)
+			defer view.Destroy()
+			view.SetTitle("metrix UI - F1 2021 UDP Utility")
+			view.SetSize(1500, 1000, webview.HintNone)
+			view.Navigate("http://localhost:8080")
+			view.Run()
 		},
 	}
 )
