@@ -5,3 +5,6 @@ ent/**/*.go
 
 node_modules
 .tailwindcss
+
+*.dll
+!dll/**/*.dll
