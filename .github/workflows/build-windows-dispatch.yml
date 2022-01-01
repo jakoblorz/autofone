@@ -15,10 +15,10 @@ jobs:
         go-version: 1.17
 
     - name: Build
-      env: |
-        - GOOS: "windows
-        - GOARCH: "amd64"
-        - CGO_ENABLED: "1"
+      env:
+        GOOS: windows
+        GOARCH: amd64
+        CGO_ENABLED: 1
       run: go build -ldflags '-H windowsgui' -o launcher.exe
         
     - name: Upload Build Artifact Windows
