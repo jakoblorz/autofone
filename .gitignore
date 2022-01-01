@@ -1,3 +1,5 @@
+.DS_STORE
+
 ent/**/*.go
 !ent/generate.go
 !ent/entc.go
