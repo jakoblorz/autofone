@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jakoblorz/metrikxd/constants"
@@ -51,11 +52,21 @@ type ReadUDPPackets struct {
 	Host string
 	Port int
 
-	conn   net.Conn
-	reader *pipe.PacketReader
+	conn     net.Conn
+	reader   *pipe.PacketReader
+	readerMx sync.Locker
 
 	options       *pipe.PacketReaderOptions
 	applyThenWith step.Step
+}
+
+func (r *ReadUDPPackets) Out() chan interface{} {
+	r.readerMx.Lock()
+	defer r.readerMx.Unlock()
+	if r.reader == nil {
+		return nil
+	}
+	return r.reader.Out()
 }
 
 func NewUDPPacketReader(ctx context.Context, host string, port int, initialOptions *pipe.PacketReaderOptions) *ReadUDPPackets {
@@ -66,6 +77,8 @@ func NewUDPPacketReader(ctx context.Context, host string, port int, initialOptio
 
 		Host: host,
 		Port: port,
+
+		readerMx: new(sync.Mutex),
 	}
 	sort.Sort(initialOptions)
 	p.Page = www.Page{"game-setup", p.renderF1GamePage, partials.RenderGameSetupHeader, p.renderF1GamePartial, www.NotifyStatsChanged}
@@ -197,22 +210,18 @@ func (r *ReadUDPPackets) Run() {
 				}
 				defer conn.Close()
 
-				log.Printf("Listening for incoming packets on %s:%d", r.Host, r.Port)
+				log.Printf("Listening for incoming packets on %s:%d with filter %+v", r.Host, r.Port, r.options.Filter)
 
 				r.conn = conn
+				r.readerMx.Lock()
 				r.reader = pipe.ReadUDPPackets(r.Context, conn, r.options)
-				if r.applyThenWith != nil {
-					r.reader.Then(r.applyThenWith)
-				}
-
+				defer func(ch chan interface{}) {
+					close(ch)
+				}(r.reader.Out())
+				r.readerMx.Unlock()
 				r.reader.Process()
 			}()
 
 		}
 	}
-}
-
-func (r *ReadUDPPackets) Then(s step.Step) step.Step {
-	r.applyThenWith = s
-	return s
 }

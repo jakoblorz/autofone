@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jakoblorz/metrikxd/pipe"
@@ -15,6 +16,7 @@ import (
 
 type WriteHTTPPackets struct {
 	context.Context
+	step.Step
 	www.Page
 
 	toTemplate toTemplateRenderer
@@ -22,19 +24,20 @@ type WriteHTTPPackets struct {
 
 	responseHandler pipe.HTTPResponseHandler
 
-	step       step.Step
 	stepCtx    context.Context
 	stepCancel context.CancelFunc
 
-	applyThenWith step.Step
+	applyAfterWith   step.Outer
+	applyAfterWithMx sync.Locker
 }
 
 func NewHTTPPacketWriter(ctx context.Context, initialTemplateString string) *WriteHTTPPackets {
 	w := &WriteHTTPPackets{
-		Context:         ctx,
-		toTemplate:      toTemplateRenderer{"matri-x.de", 0, initialTemplateString, initialTemplateString},
-		toEncoding:      pipe.JSONEncoding,
-		responseHandler: pipe.StdoutResponseHandler,
+		Context:          ctx,
+		toTemplate:       toTemplateRenderer{"matri-x.de", 0, initialTemplateString, initialTemplateString},
+		toEncoding:       pipe.JSONEncoding,
+		responseHandler:  pipe.StdoutResponseHandler,
+		applyAfterWithMx: new(sync.Mutex),
 	}
 	w.Page = www.Page{"sending", w.renderSendingPage, partials.RenderSendingHeader, w.renderSendingPartial, www.NotifyStatsChanged}
 	return w
@@ -105,6 +108,16 @@ func (w *WriteHTTPPackets) setState(u func() error) error {
 	return u()
 }
 
+func (w *WriteHTTPPackets) After(o step.Outer) {
+	w.applyAfterWithMx.Lock()
+	defer w.applyAfterWithMx.Unlock()
+
+	w.applyAfterWith = o
+	if w.stepCtx != nil {
+		w.stepCancel()
+	}
+}
+
 func (w *WriteHTTPPackets) Run() {
 	for {
 		select {
@@ -112,25 +125,17 @@ func (w *WriteHTTPPackets) Run() {
 			return
 		default:
 			func() {
+				w.applyAfterWithMx.Lock()
 				w.stepCtx, w.stepCancel = context.WithCancel(w.Context)
-				w.step = pipe.WritePacketToHTTP(w.stepCtx, &w.toTemplate, w.toEncoding, w.responseHandler)
-				if w.applyThenWith != nil {
-					w.step.Then(w.applyThenWith)
+				w.Step = pipe.WritePacketToHTTP(w.stepCtx, &w.toTemplate, w.toEncoding, w.responseHandler)
+				if w.applyAfterWith != nil {
+					w.Step.After(w.applyAfterWith)
 				}
+				w.applyAfterWithMx.Unlock()
 
-				w.step.Process()
+				w.Step.Process()
 			}()
 		}
-	}
-}
-
-func (r *WriteHTTPPackets) Step() step.Step {
-	return &stepPatcher{
-		Step: r.step,
-		onThen: func(st step.Step) step.Step {
-			r.applyThenWith = st
-			return st
-		},
 	}
 }
 
@@ -144,14 +149,4 @@ type toTemplateRenderer struct {
 
 func (t *toTemplateRenderer) String() string {
 	return t.toTemplateString
-}
-
-type stepPatcher struct {
-	step.Step
-	onThen func(step.Step) step.Step
-}
-
-func (s *stepPatcher) Then(st step.Step) step.Step {
-	s.onThen(st)
-	return st
 }

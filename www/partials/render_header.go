@@ -40,23 +40,27 @@ func getMetricsFor(snapshot func() map[string]metric.Metric) []map[string]interf
 	return metrics
 }
 
+func appendMetrics(p fiber.Map) {
+	p["GameSetupMetrics"] = getMetricsFor(func() map[string]metric.Metric {
+		return map[string]metric.Metric{
+			pipe.PacketReaderExpVarRX: expvar.Get(pipe.PacketReaderExpVarRX).(metric.Metric),
+			pipe.PacketReaderExpVarTX: expvar.Get(pipe.PacketReaderExpVarTX).(metric.Metric),
+		}
+	})[0]
+	p["SendingMetrics"] = getMetricsFor(func() map[string]metric.Metric {
+		return map[string]metric.Metric{
+			pipe.PacketWriterExpVarRX: expvar.Get(pipe.PacketWriterExpVarRX).(metric.Metric),
+			pipe.PacketWriterExpVarTX: expvar.Get(pipe.PacketWriterExpVarTX).(metric.Metric),
+		}
+	})[0]
+}
+
 func renderHeader(slug string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		p := fiber.Map{
 			"Slug": slug,
 		}
-		p["GameSetupMetrics"] = getMetricsFor(func() map[string]metric.Metric {
-			return map[string]metric.Metric{
-				pipe.PacketReaderExpVarRX: expvar.Get("random:gauge").(metric.Metric),
-				pipe.PacketReaderExpVarTX: expvar.Get(pipe.PacketReaderExpVarTX).(metric.Metric),
-			}
-		})[0]
-		p["SendingMetrics"] = getMetricsFor(func() map[string]metric.Metric {
-			return map[string]metric.Metric{
-				pipe.PacketWriterExpVarRX: expvar.Get("random:gauge").(metric.Metric),
-				pipe.PacketWriterExpVarTX: expvar.Get(pipe.PacketWriterExpVarTX).(metric.Metric),
-			}
-		})[0]
+		appendMetrics(p)
 
 		return c.Render("partials/header", p)
 	}

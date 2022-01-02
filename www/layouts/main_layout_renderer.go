@@ -57,13 +57,13 @@ func RenderMainLayout(template string, c *fiber.Ctx, props RenderMainLayoutProps
 	}
 	p["GameSetupMetrics"] = getMetricsFor(func() map[string]metric.Metric {
 		return map[string]metric.Metric{
-			pipe.PacketReaderExpVarRX: expvar.Get("random:gauge").(metric.Metric),
+			pipe.PacketReaderExpVarRX: expvar.Get(pipe.PacketReaderExpVarRX).(metric.Metric),
 			pipe.PacketReaderExpVarTX: expvar.Get(pipe.PacketReaderExpVarTX).(metric.Metric),
 		}
 	})[0]
 	p["SendingMetrics"] = getMetricsFor(func() map[string]metric.Metric {
 		return map[string]metric.Metric{
-			pipe.PacketWriterExpVarRX: expvar.Get("random:gauge").(metric.Metric),
+			pipe.PacketWriterExpVarRX: expvar.Get(pipe.PacketWriterExpVarRX).(metric.Metric),
 			pipe.PacketWriterExpVarTX: expvar.Get(pipe.PacketWriterExpVarTX).(metric.Metric),
 		}
 	})[0]

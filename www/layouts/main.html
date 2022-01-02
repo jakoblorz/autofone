@@ -14,7 +14,8 @@
 <body hx-sse="connect:/{{.Slug}}/sse">
     <div hx-trigger="sse:stats" hx-get="/{{.Slug}}/header" hx-target="#header"></div>
     
-    <main class="w-screen h-screen px-8 text-black dark:text-white">
+    <main class="w-screen h-screen px-8 text-black dark:text-white flex flex-col">
+        <div>
         <div class="relative z-30 bg-white rounded-t-xl my-auto xl:mt-18 dark:bg-gray-800 dark:divide-gray-200/5 dark:highlight-white/10">
             <nav class="py-4 px-4 sm:px-6 lg:px-4 xl:px-6 text-sm font-medium flex flex-row items-center justify-between">
                 <ul class="flex space-x-2">
@@ -77,13 +78,17 @@
         </section>
 
         <!-- <section id="faq">
-            {{/* template "partials/faq" . */}}
-        </section>
+            {{ template "partials/faq" . }}
+        </section> -->
 
-        <section id="settings">
+        <!-- <section id="settings">
             {{/* template "partials/settings" . */}}
         </section> -->
+    </div>
+
+        
+    <footer class="flex-none mt-auto text-white relative flex flex-col items-start lg:pt-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8"><p class="text-sm self-center font-semibold tracking-wide uppercase mb-4">Made with ❤️ by <a href="https://github.com/jakoblorz">Jakob</a></p></footer>
+
     </main>
-    <footer class="flex-none text-white relative mt-16 flex flex-col items-start lg:pt-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8"><p class="text-sm self-center font-semibold tracking-wide uppercase mb-4">Made with ❤️ by <a href="https://github.com/jakoblorz">Jakob</a></p></footer>
 </body>
 </html>

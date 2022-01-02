@@ -1,33 +1,46 @@
 package step
 
-import "context"
+import (
+	"context"
+	"time"
+)
+
+type Outer interface {
+	Out() chan interface{}
+}
+
+type Inner interface {
+	In() chan interface{}
+}
 
 type Step interface {
-	context.Context
+	Outer
+	Inner
 
-	ReadFrom(<-chan interface{})
+	ReadFrom(chan interface{})
 	WriteTo(chan interface{})
-
-	Out() <-chan interface{}
 
 	// Starts the processing for this processor
 	Process()
 
 	// Then gets the next processor and returns the next processor,
 	// so that Then(p1).Then(p2) etc is possible
-	Then(Step) Step
+	After(Outer)
 }
 
 type step struct {
 	context.Context
-	in  <-chan interface{}
+
+	in   chan interface{}
+	prev Outer
+
 	out chan interface{}
 
 	processFunc func(in interface{}) interface{}
 	emitFunc    func(out chan<- interface{})
 }
 
-func (p *step) ReadFrom(ch <-chan interface{}) {
+func (p *step) ReadFrom(ch chan interface{}) {
 	p.in = ch
 }
 
@@ -35,42 +48,70 @@ func (p *step) WriteTo(ch chan interface{}) {
 	p.out = ch
 }
 
-func (p *step) Out() <-chan interface{} {
+func (p *step) In() chan interface{} {
+	return p.in
+}
+
+func (p *step) Out() chan interface{} {
 	return p.out
 }
 
 func (p *step) Process() {
 
-	if p.in == nil && p.emitFunc != nil {
+	if p.in == nil && p.prev == nil && p.emitFunc != nil {
 		in := make(chan interface{}, 1)
 		go p.emitFunc(in)
 		p.in = in
 	}
 
 	for {
-		select {
-		case <-p.Done():
-			for {
-				_, ok := <-p.in
+		if p.prev != nil {
+			if in := p.prev.Out(); in != nil {
+				select {
+				case <-p.Done():
+					for {
+						_, ok := <-in
+						if !ok {
+							return
+						}
+					}
+				case msg, ok := <-in:
+					if !ok {
+						return
+					}
+
+					if out := p.processFunc(msg); out != nil {
+						p.out <- out
+					}
+				}
+			} else {
+				<-time.After(100 * time.Millisecond)
+			}
+		} else {
+			select {
+			case <-p.Done():
+				for {
+					_, ok := <-p.in
+					if !ok {
+						return
+					}
+				}
+			case msg, ok := <-p.in:
 				if !ok {
 					return
 				}
-			}
-		case msg, ok := <-p.in:
-			if !ok {
-				return
-			}
 
-			if out := p.processFunc(msg); out != nil {
-				p.out <- out
+				if out := p.processFunc(msg); out != nil {
+					p.out <- out
+				}
 			}
 		}
 	}
 }
 
-func (p *step) Then(s Step) Step {
-	s.ReadFrom(p.out)
-	return s
+func (p *step) After(s Outer) {
+	p.prev = s
+	p.in = nil
 }
 
 func New(ctx context.Context, processFunc func(in interface{}) interface{}, emitFunc func(out chan<- interface{})) Step {
