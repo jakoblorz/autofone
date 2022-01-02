@@ -9,6 +9,7 @@ require (
 	github.com/gofiber/adaptor/v2 v2.1.15
 	github.com/gofiber/fiber/v2 v2.23.0
 	github.com/gofiber/template v1.6.20
+	github.com/jakoblorz/metricrendering v0.0.0-20220102182648-3e7b0bcbc0cc
 	github.com/mailru/easyjson v0.7.7
 	github.com/masseelch/elk v0.5.2
 	github.com/spf13/cobra v1.2.1

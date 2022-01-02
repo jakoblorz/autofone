@@ -1,7 +1,9 @@
 package modules
 
 import (
+	"bufio"
 	"context"
+	"expvar"
 	"fmt"
 	"net"
 	"reflect"
@@ -10,12 +12,14 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/jakoblorz/metricrendering/svg"
 	"github.com/jakoblorz/metrikxd/constants"
 	"github.com/jakoblorz/metrikxd/pipe"
 	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/jakoblorz/metrikxd/pkg/step"
 	"github.com/jakoblorz/metrikxd/www"
 	"github.com/jakoblorz/metrikxd/www/partials"
+	"github.com/zserge/metric"
 )
 
 func uint8ToSPF(p uint8, name string) partials.SinglePacketFilter {
@@ -92,6 +96,19 @@ func (r *ReadUDPPackets) getSharedProps() partials.RenderGameSetupSharedProps {
 		Port:    r.Port,
 		Packets: getOnOffState(r.options),
 	}
+}
+
+func (r *ReadUDPPackets) renderStatsSVG(c *fiber.Ctx) error {
+	c.Set(fiber.HeaderContentType, "text/svg")
+
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		svg.Fprint(w, func() map[string]metric.Metric {
+			return map[string]metric.Metric{
+				pipe.PacketReaderExpVarRX: expvar.Get(pipe.PacketReaderExpVarRX).(metric.Metric),
+			}
+		})
+	})
+	return nil
 }
 
 func (r *ReadUDPPackets) renderF1GamePage(c *fiber.Ctx) error {
@@ -186,6 +203,7 @@ func (r *ReadUDPPackets) updateUDPReader(c *fiber.Ctx) error {
 func (r *ReadUDPPackets) Mount(app *fiber.App) {
 	r.Page.Mount(app)
 	app.Post(fmt.Sprintf("/%s", r.Page.Slug), r.updateUDPReader)
+	app.Get(fmt.Sprintf("/%s/stats.svg", r.Page.Slug), r.renderStatsSVG)
 }
 
 func (r *ReadUDPPackets) setState(u func() error) error {
