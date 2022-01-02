@@ -36,7 +36,7 @@ func NewHTTPPacketWriter(ctx context.Context, initialTemplateString string) *Wri
 		toEncoding:      pipe.JSONEncoding,
 		responseHandler: pipe.StdoutResponseHandler,
 	}
-	w.Page = www.Page{"sending", w.renderSendingPage, w.renderSendingPartial, www.EmptySSEHandler}
+	w.Page = www.Page{"sending", w.renderSendingPage, partials.RenderSendingHeader, w.renderSendingPartial, www.NotifyStatsChanged}
 	return w
 }
 

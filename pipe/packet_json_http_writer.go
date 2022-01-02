@@ -21,6 +21,11 @@ const (
 	PacketWriterExpVarTX = "pipe::packet_writer.tx"
 )
 
+func init() {
+	expvar.Publish(PacketWriterExpVarRX, metric.NewGauge("60s1s"))
+	expvar.Publish(PacketWriterExpVarTX, metric.NewGauge("60s1s"))
+}
+
 type Stringer interface {
 	String() string
 }
@@ -50,8 +55,6 @@ var (
 )
 
 func WritePacketToHTTP(ctx context.Context, to Stringer, encoding HTTPEncoding, responseHandler HTTPResponseHandler) step.Step {
-	expvar.Publish(PacketWriterExpVarRX, metric.NewGauge("60s1s"))
-	expvar.Publish(PacketWriterExpVarTX, metric.NewGauge("60s1s"))
 	switch encoding {
 	case JSONEncoding:
 		p := &PacketJSONHTTPWriter{

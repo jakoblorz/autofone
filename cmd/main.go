@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"context"
+	"expvar"
 	"fmt"
-	"net/http"
+	"math/rand"
 	"os"
+	"time"
 
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/jakoblorz/metrikxd/modules"
@@ -16,6 +17,7 @@ import (
 	"github.com/jakoblorz/metrikxd/www/root"
 	"github.com/spf13/cobra"
 	"github.com/webview/webview"
+	"github.com/zserge/metric"
 	"go.uber.org/zap"
 
 	// In this example we use the html template engine
@@ -36,12 +38,12 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// // Random numbers always look nice on graphs
-			// expvar.Publish("random:gauge", metric.NewGauge("60s1s"))
-			// go func() {
-			// 	for range time.Tick(123 * time.Millisecond) {
-			// 		expvar.Get("random:gauge").(metric.Metric).Add(rand.Float64())
-			// 	}
-			// }()
+			expvar.Publish("random:gauge", metric.NewGauge("60s1s"))
+			go func() {
+				for range time.Tick(123 * time.Millisecond) {
+					expvar.Get("random:gauge").(metric.Metric).Add(rand.Float64())
+				}
+			}()
 
 			// Create a new engine by passing the template folder
 			// and template extension using <engine>.New(dir, ext string)
@@ -70,8 +72,6 @@ var (
 			for _, p := range www.Pages {
 				p.Mount(app)
 			}
-
-			app.Get("/chunk", adaptor.HTTPHandler(http.HandlerFunc(notifyChunk)))
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -121,14 +121,6 @@ var (
 		},
 	}
 )
-
-func notifyChunk(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-}
 
 func verbosef(format string, args ...interface{}) {
 	if verbose {

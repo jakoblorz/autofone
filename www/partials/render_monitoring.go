@@ -37,3 +37,5 @@ func RenderMonitoringPage(c *fiber.Ctx) error {
 		},
 	})
 }
+
+var RenderMonitoringHeader = renderHeader("monitoring")

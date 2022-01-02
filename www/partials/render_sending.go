@@ -44,3 +44,5 @@ func RenderSendingPage(c *fiber.Ctx, sharedProps RenderSendingSharedProps) error
 		},
 	})
 }
+
+var RenderSendingHeader = renderHeader("sending")

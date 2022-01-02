@@ -37,3 +37,5 @@ func RenderProcessingPage(c *fiber.Ctx) error {
 		},
 	})
 }
+
+var RenderProcessingHeader = renderHeader("processing")

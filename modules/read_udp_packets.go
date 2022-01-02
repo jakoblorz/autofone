@@ -68,7 +68,7 @@ func NewUDPPacketReader(ctx context.Context, host string, port int, initialOptio
 		Port: port,
 	}
 	sort.Sort(initialOptions)
-	p.Page = www.Page{"game-setup", p.renderF1GamePage, p.renderF1GamePartial, www.EmptySSEHandler}
+	p.Page = www.Page{"game-setup", p.renderF1GamePage, partials.RenderGameSetupHeader, p.renderF1GamePartial, www.NotifyStatsChanged}
 	return p
 }
 

@@ -23,6 +23,11 @@ const (
 	PacketReaderExpVarTX = "pipe::packet_reader.tx"
 )
 
+func init() {
+	expvar.Publish(PacketReaderExpVarRX, metric.NewGauge("60s1s"))
+	expvar.Publish(PacketReaderExpVarTX, metric.NewGauge("60s1s"))
+}
+
 type PacketReader struct {
 	step.Step
 	io.Reader
@@ -128,8 +133,6 @@ func (p *PacketReaderOptions) Less(i, j int) bool {
 }
 
 func ReadUDPPackets(ctx context.Context, conn net.Conn, opts *PacketReaderOptions) *PacketReader {
-	expvar.Publish(PacketReaderExpVarRX, metric.NewGauge("60s1s"))
-	expvar.Publish(PacketReaderExpVarTX, metric.NewGauge("60s1s"))
 	r := &PacketReader{Reader: conn, filter: opts.Filter, logBytes: opts.LogIncomingBytes, logStruct: opts.LogDecodedStruct}
 	r.Step = step.Emitter(ctx, r.read)
 	return r

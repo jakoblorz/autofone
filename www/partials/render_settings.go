@@ -37,3 +37,5 @@ func RenderSettingsPage(c *fiber.Ctx) error {
 		},
 	})
 }
+
+var RenderSettingsHeader = renderHeader("settings")

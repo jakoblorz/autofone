@@ -53,3 +53,5 @@ func RenderGameSetupPage(c *fiber.Ctx, sharedProps RenderGameSetupSharedProps) e
 		},
 	})
 }
+
+var RenderGameSetupHeader = renderHeader("game-setup")

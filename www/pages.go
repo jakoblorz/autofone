@@ -1,62 +1,47 @@
 package www
 
 import (
+	"bufio"
 	"fmt"
-	"net/http"
+	"log"
 	"time"
 
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jakoblorz/metrikxd/www/partials"
 )
 
 var Pages = []Page{
-	{"settings", partials.RenderSettingsPage, partials.RenderSettingsPartial, EmptySSEHandler},
-	{"processing", partials.RenderProcessingPage, partials.RenderProcessingPartial, EmptySSEHandler},
-	{"monitoring", partials.RenderMonitoringPage, partials.RenderMonitoringPartial, EmptySSEHandler},
-	// {"sending", partials.RenderSendingPage, partials.RenderSendingPartial, EmptySSEHandler},
-	{"workbench", nil, partials.RenderWorkbenchPartial, EmptySSEHandler},
+	{"settings", partials.RenderSettingsPage, partials.RenderSettingsHeader, partials.RenderSettingsPartial, NotifyStatsChanged},
+	{"processing", partials.RenderProcessingPage, partials.RenderProcessingHeader, partials.RenderProcessingPartial, NotifyStatsChanged},
+	{"monitoring", partials.RenderMonitoringPage, partials.RenderMonitoringHeader, partials.RenderMonitoringPartial, NotifyStatsChanged},
 }
 
-func EmptySSEHandler(c *fiber.Ctx) error {
-	return adaptor.HTTPHandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.Header().Set("Access-Control-Allow-Origin", "*")
-		rw.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		rw.Header().Set("Content-Type", "text/event-stream")
-		rw.Header().Set("Cache-Control", "no-cache")
-		rw.Header().Set("Connection", "keep-alive")
+func NotifyStatsChanged(c *fiber.Ctx) (err error) {
+	c.Set("Access-Control-Allow-Origin", "*")
+	c.Set("Access-Control-Allow-Headers", "Content-Type")
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Connection", "keep-alive")
 
-		defer func() {
-			if f, ok := rw.(http.Flusher); ok {
-				f.Flush()
-			}
-		}()
-
-		timer := time.NewTimer(1 * time.Second)
-		defer func() {
-			if !timer.Stop() {
-				<-timer.C
-			}
-		}()
-
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 		for {
-			select {
-			case <-r.Context().Done():
+			time.Sleep(1 * time.Second)
+
+			fmt.Fprintf(w, "event: stats\ndata: %s\n\n", time.Now())
+
+			if err = w.Flush(); err != nil {
+				log.Print("client disconnected")
 				return
-			case <-timer.C:
-				fmt.Fprint(rw, "rerender")
-				if f, ok := rw.(http.Flusher); ok {
-					f.Flush()
-				}
 			}
 		}
-
-	})(c)
+	})
+	return
 }
 
 type Page struct {
 	Slug           string
 	PageHandler    fiber.Handler
+	HeaderHandler  fiber.Handler
 	PartialHandler fiber.Handler
 	SSEHandler     fiber.Handler
 }
@@ -67,6 +52,9 @@ func (p *Page) Mount(app *fiber.App) {
 	}
 	if p.PartialHandler != nil {
 		app.Get(fmt.Sprintf("/p/%s", p.Slug), p.PartialHandler)
+	}
+	if p.HeaderHandler != nil {
+		app.Get(fmt.Sprintf("/%s/header", p.Slug), p.HeaderHandler)
 	}
 	if p.SSEHandler != nil {
 		app.Get(fmt.Sprintf("/%s/sse", p.Slug), p.SSEHandler)
