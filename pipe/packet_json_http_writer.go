@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"expvar"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,12 @@ import (
 	"sync"
 
 	"github.com/jakoblorz/metrikxd/pkg/step"
+	"github.com/zserge/metric"
+)
+
+const (
+	PacketWriterExpVarRX = "pipe::packet_writer.rx"
+	PacketWriterExpVarTX = "pipe::packet_writer.tx"
 )
 
 type Stringer interface {
@@ -43,6 +50,8 @@ var (
 )
 
 func WritePacketToHTTP(ctx context.Context, to Stringer, encoding HTTPEncoding, responseHandler HTTPResponseHandler) step.Step {
+	expvar.Publish(PacketWriterExpVarRX, metric.NewGauge("60s1s"))
+	expvar.Publish(PacketWriterExpVarTX, metric.NewGauge("60s1s"))
 	switch encoding {
 	case JSONEncoding:
 		p := &PacketJSONHTTPWriter{
@@ -86,6 +95,8 @@ func (u *PacketJSONHTTPWriter) handle(pack interface{}) interface{} {
 			}
 		}
 	}()
+	expvar.Get(PacketWriterExpVarRX).(metric.Metric).Add(1)
+
 	data, err := json.Marshal(pack)
 	if err != nil {
 		panic(err)
@@ -105,6 +116,8 @@ func (u *PacketJSONHTTPWriter) handle(pack interface{}) interface{} {
 		panic(err)
 	}
 	defer res.Body.Close()
+
+	expvar.Get(PacketWriterExpVarTX).(metric.Metric).Add(1)
 
 	return u.handleResponse(res)
 }

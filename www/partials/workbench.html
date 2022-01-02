@@ -2,6 +2,9 @@
     <div class="workbench rounded-lg shadow-inner h-96 ring-2 ring-gray-900/5 flex flex-row items-center space-x-20 justify-center">
         <div class="relative z-10 h-14 w-60 px-12 py-4 rounded-md bg-gray-600 dark:bg-gray-100 text-gray-100 dark:text-gray-800 cursor-pointer hover:ring-indigo-500 hover:ring-4 hover:border-indigo-500 border-gray-300 duration-100 {{if eq .Slug "game-setup"}} ring-4 ring-indigo-500 border-indigo-500 {{end}}" hx-get="/game-setup" hx-target="body" hx-swap="outerHTML" hx-push-url="true">
             Game Setup
+            <div class="absolute w-56 text-indigo-500" style="left: 0.5rem;">
+                {{ template "components/metric-gauge" .GameSetupMetrics }}
+            </div>
             <div class="absolute right-0 h-14 before:absolute before:-top-5 before:-left-2 before:w-4 before:h-4 before:rounded-full before:bg-gray-600 before:dark:bg-gray-100">
                 <div class="absolute right-1 top-1 h-14 before:absolute before:-top-5 before:left-0 before:w-2 before:h-2 before:rounded-full before:bg-gray-300 before:z-10 after:absolute after:-top-5 after:left-1 after:w-24 after:h-2 after:rounded-full after:bg-indigo-500"></div>
             </div>
@@ -23,6 +26,9 @@
 
         <div class="relative z-10 h-14 w-60 px-12 py-4 rounded-md bg-gray-600 dark:bg-gray-100 text-gray-100 dark:text-gray-800 cursor-pointer hover:ring-rose-500 hover:ring-4 hover:border-rose-500 border-gray-300 duration-100 {{if eq .Slug "sending"}} ring-4 ring-rose-500 border-rose-500 {{end}}" hx-get="/sending" hx-target="body" hx-swap="outerHTML" hx-push-url="true">
             Sending
+            <div class="absolute w-56 text-rose-500"  style="left: 0.5rem;">
+                {{ template "components/metric-gauge" .SendingMetrics }}
+            </div>
             <div class="absolute right-0 h-14 before:absolute before:-top-5 before:-left-2 before:w-4 before:h-4 before:rounded-full before:bg-gray-600 before:dark:bg-gray-100">
                 <div class="absolute right-1 top-1 h-14 before:absolute before:-top-5 before:left-0 before:w-2 before:h-2 before:rounded-full before:bg-gray-300 before:z-10 after:absolute after:-top-5 after:left-0 after:w-3 after:h-2 after:rounded-l-xl after:bg-gray-300"></div>
             </div>

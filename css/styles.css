@@ -35,3 +35,12 @@ h4 {
 .list-item-active {
     width: calc(100% + 40px);
 }
+
+.metrics * { margin: 0; padding: 0; box-sizing: border-box; font-family: monospace; font-size: 12px; }
+.metrics .col-1 { flex: 1; }
+.metrics .col-2 { flex: 2.5; }
+.metrics .table { width: 100px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.33); }
+.metrics .table td, .metrics .table th { text-align: center; }
+.metrics .timeline { padding: 0 0.5em; }
+.metrics path { fill: none; stroke: rgba(0,0,0,0.33); stroke-width: 1; stroke-linecap: round; stroke-linejoin: round; }
+.metrics path:last-child { stroke: currentColor; }

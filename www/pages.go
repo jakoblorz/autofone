@@ -3,6 +3,7 @@ package www
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +26,31 @@ func EmptySSEHandler(c *fiber.Ctx) error {
 		rw.Header().Set("Cache-Control", "no-cache")
 		rw.Header().Set("Connection", "keep-alive")
 
-		<-r.Context().Done()
+		defer func() {
+			if f, ok := rw.(http.Flusher); ok {
+				f.Flush()
+			}
+		}()
+
+		timer := time.NewTimer(1 * time.Second)
+		defer func() {
+			if !timer.Stop() {
+				<-timer.C
+			}
+		}()
+
+		for {
+			select {
+			case <-r.Context().Done():
+				return
+			case <-timer.C:
+				fmt.Fprint(rw, "rerender")
+				if f, ok := rw.(http.Flusher); ok {
+					f.Flush()
+				}
+			}
+		}
+
 	})(c)
 }
 

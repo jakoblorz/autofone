@@ -34,9 +34,20 @@ var (
 			log.DefaultLogger, _ = config.Build()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+
+			// // Random numbers always look nice on graphs
+			// expvar.Publish("random:gauge", metric.NewGauge("60s1s"))
+			// go func() {
+			// 	for range time.Tick(123 * time.Millisecond) {
+			// 		expvar.Get("random:gauge").(metric.Metric).Add(rand.Float64())
+			// 	}
+			// }()
+
 			// Create a new engine by passing the template folder
 			// and template extension using <engine>.New(dir, ext string)
 			templates := html.New("./www", ".html")
+			templates.AddFunc("path", path)
+			templates.AddFunc("duration", duration)
 
 			// Reload the templates on each render, good for development
 			templates.Reload(true) // Optional. Default: false
@@ -134,4 +145,49 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func path(samples []interface{}, keys ...string) []string {
+	var min, max float64
+	paths := make([]string, len(keys), len(keys))
+	for i := 0; i < len(samples); i++ {
+		s := samples[i].(map[string]interface{})
+		for _, k := range keys {
+			x := s[k].(float64)
+			if i == 0 || x < min {
+				min = x
+			}
+			if i == 0 || x > max {
+				max = x
+			}
+		}
+	}
+	for i := 0; i < len(samples); i++ {
+		s := samples[i].(map[string]interface{})
+		for j, k := range keys {
+			v := s[k].(float64)
+			x := float64(i+1) / float64(len(samples))
+			y := (v - min) / (max - min)
+			if max == min {
+				y = 0
+			}
+			if i == 0 {
+				paths[j] = fmt.Sprintf("M%f %f", 0.0, (1-y)*18+1)
+			}
+			paths[j] += fmt.Sprintf(" L%f %f", x*100, (1-y)*18+1)
+		}
+	}
+	return paths
+}
+
+func duration(samples []interface{}, n float64) string {
+	n = n * float64(len(samples))
+	if n < 60 {
+		return fmt.Sprintf("%d sec", int(n))
+	} else if n < 60*60 {
+		return fmt.Sprintf("%d min", int(n/60))
+	} else if n < 24*60*60 {
+		return fmt.Sprintf("%d hrs", int(n/60/60))
+	}
+	return fmt.Sprintf("%d days", int(n/24/60/60))
 }

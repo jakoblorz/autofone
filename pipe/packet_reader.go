@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"expvar"
 	"fmt"
 	"io"
 	"net"
@@ -14,6 +15,12 @@ import (
 	"github.com/jakoblorz/metrikxd/packets"
 	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/jakoblorz/metrikxd/pkg/step"
+	"github.com/zserge/metric"
+)
+
+const (
+	PacketReaderExpVarRX = "pipe::packet_reader.rx"
+	PacketReaderExpVarTX = "pipe::packet_reader.tx"
 )
 
 type PacketReader struct {
@@ -35,6 +42,8 @@ func (u *PacketReader) read(ch chan<- interface{}) {
 			log.Printf("read error: %+v", err)
 			return
 		}
+
+		expvar.Get(PacketReaderExpVarRX).(metric.Metric).Add(1)
 
 		header := new(packets.PacketHeader)
 		if err = read(buf, header); err != nil {
@@ -93,6 +102,8 @@ func (u *PacketReader) read(ch chan<- interface{}) {
 		}
 
 		ch <- pack
+
+		expvar.Get(PacketReaderExpVarTX).(metric.Metric).Add(1)
 	}
 }
 
@@ -117,6 +128,8 @@ func (p *PacketReaderOptions) Less(i, j int) bool {
 }
 
 func ReadUDPPackets(ctx context.Context, conn net.Conn, opts *PacketReaderOptions) *PacketReader {
+	expvar.Publish(PacketReaderExpVarRX, metric.NewGauge("60s1s"))
+	expvar.Publish(PacketReaderExpVarTX, metric.NewGauge("60s1s"))
 	r := &PacketReader{Reader: conn, filter: opts.Filter, logBytes: opts.LogIncomingBytes, logStruct: opts.LogDecodedStruct}
 	r.Step = step.Emitter(ctx, r.read)
 	return r
