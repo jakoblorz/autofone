@@ -21,8 +21,8 @@ type ParticipantData struct {
 
 type PacketParticipantsData struct {
 	Header        PacketHeader
-	NumActiveCars uint8               // Number of active cars in the data – should match number of
-	Participants  [22]ParticipantData // cars on HUD
+	NumActiveCars uint8 // Number of active cars in the data – should match number of cars on HUD
+	Participants  [22]ParticipantData
 }
 
 func (p *ParticipantData) NameToString() string {

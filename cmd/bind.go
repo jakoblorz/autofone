@@ -121,7 +121,7 @@ READ_UDP:
 			log.Print(message)
 		}
 
-		pack := newPacketById(header.PacketID)
+		pack := newPacketById(header.PacketID, fmt.Sprint(header.PacketFormat))
 		if pack == nil {
 			log.Printf("invalid packet: %d", header.PacketID)
 			continue
@@ -250,11 +250,14 @@ func read(buf []byte, pack interface{}) error {
 	return nil
 }
 
-func newPacketById(packetId uint8) interface{} {
+func newPacketById(packetId uint8, packetFormat string) interface{} {
 	switch packetId {
 	case constants.PacketMotion:
 		return new(packets.PacketMotionData)
 	case constants.PacketSession:
+		if packetFormat == "2022" {
+			return new(packets.PacketSessionData22)
+		}
 		return new(packets.PacketSessionData)
 	case constants.PacketLap:
 		return new(packets.PacketLapData)
@@ -269,10 +272,16 @@ func newPacketById(packetId uint8) interface{} {
 	case constants.PacketCarStatus:
 		return new(packets.PacketCarStatusData)
 	case constants.PacketFinalClassification:
+		if packetFormat == "2022" {
+			return new(packets.PacketFinalClassificationData22)
+		}
 		return new(packets.PacketFinalClassificationData)
 	case constants.PacketLobbyInfo:
 		return new(packets.PacketLobbyInfoData)
 	case constants.PacketCarDamage:
+		if packetFormat == "2022" {
+			return new(packets.PacketCarDamageData22)
+		}
 		return new(packets.PacketCarDamageData)
 	case constants.PacketSessionHistory:
 		return new(packets.PacketSessionHistoryData)
