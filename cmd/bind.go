@@ -294,6 +294,9 @@ func resolveEventDetails(pre *packets.PrePacketEventData) interface{} {
 	case event.PenaltyIssued:
 		return new(packets.Penalty)
 	case event.SpeedTrapTriggered:
+		if fmt.Sprint(pre.Header.PacketFormat) == "2022" {
+			return new(packets.SpeedTrapF22)
+		}
 		return new(packets.SpeedTrap)
 	}
 
