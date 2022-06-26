@@ -1,4 +1,4 @@
-module github.com/jakoblorz/metrikxd
+module github.com/jakoblorz/autofone
 
 go 1.16
 

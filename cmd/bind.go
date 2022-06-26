@@ -15,10 +15,10 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/jakoblorz/metrikxd/constants"
-	"github.com/jakoblorz/metrikxd/constants/event"
-	"github.com/jakoblorz/metrikxd/packets"
-	"github.com/jakoblorz/metrikxd/pkg/log"
+	"github.com/jakoblorz/autofone/constants"
+	"github.com/jakoblorz/autofone/constants/event"
+	"github.com/jakoblorz/autofone/packets"
+	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/spf13/cobra"
 )
 

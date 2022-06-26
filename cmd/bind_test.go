@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jakoblorz/metrikxd/constants"
-	"github.com/jakoblorz/metrikxd/packets"
-	"github.com/jakoblorz/metrikxd/pkg/udptest"
+	"github.com/jakoblorz/autofone/constants"
+	"github.com/jakoblorz/autofone/packets"
+	"github.com/jakoblorz/autofone/pkg/udptest"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jakoblorz/metrikxd/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -12,7 +12,7 @@ import (
 var (
 	verbose bool
 	rootCmd = &cobra.Command{
-		Use: "metrikxd",
+		Use: "autofone",
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config := zap.NewProductionConfig()
 			if verbose {
