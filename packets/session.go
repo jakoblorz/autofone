@@ -62,4 +62,10 @@ type PacketSessionData struct {
 	DRSAssist                 uint8                     // 0 = off, 1 = on
 	DynamicRacingLine         uint8                     // 0 = off, 1 = corners only, 2 = full
 	DynamicRangeLineType      uint8                     // 0 = 2D, 1 = 3D
+
+	// TODO: Added in F22 ???
+	GameMode      uint8  // Game mode id - see appendix
+	RuleSet       uint8  // Ruleset - see appendix
+	TimeOfDay     uint32 // Local time of day - minutes since midnight
+	SessionLength uint8  // 0 = None, 2 = Very Short, 3 = Short, 4 = Medium 5 = Medium Long, 6 = Long, 7 = Full
 }

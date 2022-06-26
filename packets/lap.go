@@ -36,4 +36,8 @@ type LapData struct {
 type PacketLapData struct {
 	Header  PacketHeader
 	LapData [22]LapData // Lap data for all cars on track
+
+	// TODO: Added in F22 ???
+	TimeTrialPBCarIdx    uint8 // Index of Personal Best car in time trial (255 if invalid)
+	TimeTrialRivalCarIdx uint8 // Index of Rival car in time trial (255 if invalid)
 }
