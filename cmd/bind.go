@@ -59,7 +59,7 @@ for the packet ids to select.
 			}
 			defer conn.Close()
 
-			verbosef("awaiting packets from %s", conn.LocalAddr().String())
+			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
@@ -111,7 +111,7 @@ READ_UDP:
 			}
 		}
 		if c != 0 {
-			verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
+			log.Verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
 			continue READ_UDP
 		} else if verbose || logRaw {
 			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)

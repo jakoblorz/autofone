@@ -3,11 +3,11 @@ package cmd
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
 	"net"
 
 	"github.com/jakoblorz/metrikxd/constants"
 	"github.com/jakoblorz/metrikxd/packets"
+	"github.com/jakoblorz/metrikxd/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var (
 				return
 			}
 
-			verbosef("dialing %s", addr.String())
+			log.Verbosef("dialing %s", addr.String())
 			conn, err := net.DialUDP("udp", nil, addr)
 			if err != nil {
 				log.Printf("%+v", err)
@@ -36,7 +36,7 @@ var (
 			if err != nil {
 				err = nil
 			} else {
-				verbosef("sending packet with id %d: %s", constants.PacketMotion, buf.String())
+				log.Verbosef("sending packet with id %d: %s", constants.PacketMotion, buf.String())
 			}
 
 			err = binary.Write(conn, binary.LittleEndian, &motionData)
