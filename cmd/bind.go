@@ -7,12 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 	"unsafe"
 
 	"github.com/jakoblorz/autofone/constants"
@@ -20,15 +23,23 @@ import (
 	"github.com/jakoblorz/autofone/packets"
 	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/websocket"
 )
 
 var (
 	post    string
-	port    int
+	udp     int
+	tcp     int
 	filter  []uint
 	logJSON bool
 	logPack bool
 	logRaw  bool
+
+	socketPool = &socketHandler{
+		RWMutex: new(sync.RWMutex),
+		Source:  rand.NewSource(time.Now().UnixNano()),
+		conns:   make(map[string]*websocket.Conn),
+	}
 
 	clientPool = &sync.Pool{
 		New: func() interface{} {
@@ -49,15 +60,30 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			sig := make(chan os.Signal, 1)
+
 			conn, err := net.ListenUDP("udp", &net.UDPAddr{
 				IP:   net.ParseIP("localhost"),
-				Port: port,
+				Port: udp,
 			})
 			if err != nil {
 				log.Printf("%+v", err)
 				return
 			}
 			defer conn.Close()
+
+			if tcp > 0 {
+				http.Handle("/", websocket.Handler(socketPool.handleWebsocketConn))
+				go func() {
+					log.Verbosef("awaiting connections from 0.0.0.0:%d", tcp)
+					err := http.ListenAndServe(fmt.Sprintf(":%d", tcp), nil)
+					if err != nil {
+						log.Printf("%+v", err)
+						sig <- os.Interrupt
+						return
+					}
+				}()
+			}
 
 			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
 			ctx, cancel := context.WithCancel(context.Background())
@@ -69,12 +95,25 @@ for the packet ids to select.
 			}))
 			go func() {
 				defer close(stream)
-				stream.readPacketsFromConn(conn, filter)
+				stream.readPacketsFromConn(ctx, conn, filter)
+			}()
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						for {
+							_, ok := <-stream
+							if !ok {
+								return
+							}
+						}
+					case pack := <-stream:
+						go stream.writePacketToHTTP(pack, post)
+						go stream.writePacketToWebsocket(pack)
+					}
+				}
 			}()
 
-			go stream.handlePackets(ctx, post)
-
-			sig := make(chan os.Signal, 1)
 			signal.Notify(sig, os.Interrupt)
 			<-sig
 		},
@@ -86,10 +125,16 @@ type process chan struct {
 	raw    interface{}
 }
 
-func (ch process) readPacketsFromConn(conn *net.UDPConn, filter []uint) {
+func (ch process) readPacketsFromConn(ctx context.Context, conn *net.UDPConn, filter []uint) {
 
 READ_UDP:
 	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		buf := make([]byte, 1024+1024/2)
 		n, _, err := conn.ReadFromUDP(buf)
 		if err != nil {
@@ -164,20 +209,11 @@ READ_UDP:
 	}
 }
 
-func (ch process) handlePackets(ctx context.Context, to string) {
-	for {
-		select {
-		case <-ctx.Done():
-			for {
-				_, ok := <-ch
-				if !ok {
-					return
-				}
-			}
-		case pack := <-ch:
-			ch.writePacketToHTTP(pack, to)
-		}
-	}
+func (process) writePacketToWebsocket(pack struct {
+	header packets.PacketHeader
+	raw    interface{}
+}) {
+	socketPool.writeAll(pack.raw)
 }
 
 func (process) writePacketToHTTP(pack struct {
@@ -230,15 +266,74 @@ func (process) writePacketToHTTP(pack struct {
 	}
 }
 
+type socketHandler struct {
+	*sync.RWMutex
+	rand.Source
+	conns map[string]*websocket.Conn
+}
+
+func (s *socketHandler) writeAll(raw interface{}) {
+	failedHandles := make([]string, 0)
+
+	s.RLock()
+	for handle, conn := range s.conns {
+		err := websocket.JSON.Send(conn, raw)
+		if err != nil {
+			log.Printf("%+v", err)
+			failedHandles = append(failedHandles, handle)
+		}
+	}
+	s.RUnlock()
+
+	for _, handle := range failedHandles {
+		s.unregisterConn(handle)
+	}
+}
+
+func (s *socketHandler) registerConn(conn *websocket.Conn) string {
+	handle := fmt.Sprintf("%s-%f", conn.RemoteAddr(), float64(time.Now().UnixNano())*rand.New(s.Source).Float64())
+	s.Lock()
+	s.conns[handle] = conn
+	s.Unlock()
+	return handle
+}
+
+func (s *socketHandler) unregisterConn(handle string) error {
+	s.Lock()
+	conn, ok := s.conns[handle]
+	if !ok {
+		s.Unlock()
+		return nil
+	}
+	delete(s.conns, handle)
+	s.Unlock()
+	return conn.Close()
+}
+
+func (s *socketHandler) handleWebsocketConn(ws *websocket.Conn) {
+	handle := s.registerConn(ws)
+	defer s.unregisterConn(handle)
+	for {
+		// discard all messages
+		io.Copy(ioutil.Discard, ws)
+	}
+}
+
 func init() {
 	rootCmd.AddCommand(bindCmd)
 
-	bindCmd.Flags().StringVar(&post, "to", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
-	bindCmd.Flags().IntVar(&port, "port", 20777, "UDP port to listen on")
+	// settings
 	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(constants.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
-	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to destination")
-	bindCmd.Flags().BoolVar(&logPack, "pack", false, "Log unmarshaled data in go representation")
-	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received")
+
+	// io
+	bindCmd.Flags().IntVar(&udp, "udp", 20777, "UDP port to listen on; 20777 is the F1 2021/2022 default UDP port")
+	bindCmd.Flags().IntVar(&tcp, "tcp", -1, "TCP port to listen on for websocket connections; -1 means websocket is disabled")
+	bindCmd.Flags().StringVar(&post, "http", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
+
+	// logging flags
+	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to the HTTP Server")
+	bindCmd.Flags().BoolVar(&logPack, "pack", false, "Log unpacked packets")
+	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received from the UDP socket")
 }
 
 func read(buf []byte, pack interface{}) error {
