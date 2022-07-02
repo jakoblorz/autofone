@@ -21,6 +21,7 @@ import (
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/constants/event"
 	"github.com/jakoblorz/autofone/packets"
+	"github.com/jakoblorz/autofone/pkg/db"
 	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
@@ -34,6 +35,7 @@ var (
 	logJSON bool
 	logPack bool
 	logRaw  bool
+	devMode bool
 
 	socketPool = &socketHandler{
 		RWMutex: new(sync.RWMutex),
@@ -61,6 +63,8 @@ for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			sig := make(chan os.Signal, 1)
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
 			conn, err := net.ListenUDP("udp", &net.UDPAddr{
 				IP:   net.ParseIP("localhost"),
@@ -85,9 +89,10 @@ for the packet ids to select.
 				}()
 			}
 
+			dev, err := new(db.Instance).GCP(ctx, "autofone.sqlite3", "")
+			defer dev.Close()
+
 			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
 
 			stream := process(make(chan struct {
 				header packets.PacketHeader
@@ -119,6 +124,28 @@ for the packet ids to select.
 		},
 	}
 )
+
+type Packet struct {
+	Hostname string
+	packets.PacketHeader
+	Data []byte
+}
+
+const packetSchema = `
+CREATE TABLE packets (
+	Hostname TEXT,
+    PacketFormat TEXT,
+    GameMajorVersion INTEGER,
+    GameMinorVersion INTEGER,
+	PacketVersion INTEGER,
+	PacketID INTEGER,
+	SessionUID INTEGER,
+	SessionTime REAL,
+	FrameIdentifier INTEGER,
+	PlayerCarIndex INTEGER,
+	SecondaryPlayerCarIndex INTEGER,
+	Data BLOB
+)`
 
 type process chan struct {
 	header packets.PacketHeader
@@ -315,7 +342,11 @@ func (s *socketHandler) handleWebsocketConn(ws *websocket.Conn) {
 	defer s.unregisterConn(handle)
 	for {
 		// discard all messages
-		io.Copy(ioutil.Discard, ws)
+		_, err := io.Copy(ioutil.Discard, ws)
+		if err != nil {
+			log.Printf("%+v", err)
+			break
+		}
 	}
 }
 
@@ -334,6 +365,8 @@ func init() {
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to the HTTP Server")
 	bindCmd.Flags().BoolVar(&logPack, "pack", false, "Log unpacked packets")
 	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received from the UDP socket")
+
+	bindCmd.Flags().BoolVar(&devMode, "dev", false, "Enable development mode")
 }
 
 func read(buf []byte, pack interface{}) error {
