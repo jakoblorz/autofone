@@ -21,20 +21,23 @@ import (
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/constants/event"
 	"github.com/jakoblorz/autofone/packets"
-	"github.com/jakoblorz/autofone/pkg/db"
+	"github.com/jakoblorz/autofone/packets/process"
+	"github.com/jakoblorz/autofone/packets/sql"
 	"github.com/jakoblorz/autofone/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
 
 var (
-	post    string
+	url     string
 	udp     int
 	tcp     int
 	filter  []uint
 	logJSON bool
 	logPack bool
 	logRaw  bool
+
 	devMode bool
 
 	socketPool = &socketHandler{
@@ -77,7 +80,7 @@ for the packet ids to select.
 			defer conn.Close()
 
 			if tcp > 0 {
-				http.Handle("/", websocket.Handler(socketPool.handleWebsocketConn))
+				http.Handle("/", websocket.Handler(socketPool.handleConn))
 				go func() {
 					log.Verbosef("awaiting connections from 0.0.0.0:%d", tcp)
 					err := http.ListenAndServe(fmt.Sprintf(":%d", tcp), nil)
@@ -89,32 +92,58 @@ for the packet ids to select.
 				}()
 			}
 
-			dev, err := new(db.Instance).GCP(ctx, "autofone.sqlite3", "")
-			defer dev.Close()
+			host, err := os.Hostname()
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			sessionId := fmt.Sprintf("%s-%d", host, int64(float64(time.Now().UnixNano())*rand.New(rand.NewSource(time.Now().UnixNano())).Float64()))
+
+			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", fmt.Sprintf("gcs://packet-history/%s", host))
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			defer db.Close()
+
+			err = sql.Init(db.DB)
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			db.MustHardSync(ctx)
 
 			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
-
-			stream := process(make(chan struct {
-				header packets.PacketHeader
-				raw    interface{}
-			}))
+			stream := process.P{
+				Context:   ctx,
+				Hostname:  host,
+				SessionID: sessionId,
+				C:         make(chan *process.M),
+			}
 			go func() {
-				defer close(stream)
-				stream.readPacketsFromConn(ctx, conn, filter)
+				defer close(stream.C)
+
+				r := reader(stream)
+				(&r).read(ctx, conn, filter)
 			}()
 			go func() {
+				var (
+					dbwriter  = sqlwriter(stream)
+					urlwriter = httpwriter(stream)
+				)
 				for {
 					select {
 					case <-ctx.Done():
 						for {
-							_, ok := <-stream
+							_, ok := <-stream.C
 							if !ok {
 								return
 							}
 						}
-					case pack := <-stream:
-						go stream.writePacketToHTTP(pack, post)
-						go stream.writePacketToWebsocket(pack)
+					case m := <-stream.C:
+						go (&dbwriter).write(m, db)
+						go (&urlwriter).write(m, url)
+						go socketPool.write(m.Pack)
 					}
 				}
 			}()
@@ -125,34 +154,9 @@ for the packet ids to select.
 	}
 )
 
-type Packet struct {
-	Hostname string
-	packets.PacketHeader
-	Data []byte
-}
+type reader process.P
 
-const packetSchema = `
-CREATE TABLE packets (
-	Hostname TEXT,
-    PacketFormat TEXT,
-    GameMajorVersion INTEGER,
-    GameMinorVersion INTEGER,
-	PacketVersion INTEGER,
-	PacketID INTEGER,
-	SessionUID INTEGER,
-	SessionTime REAL,
-	FrameIdentifier INTEGER,
-	PlayerCarIndex INTEGER,
-	SecondaryPlayerCarIndex INTEGER,
-	Data BLOB
-)`
-
-type process chan struct {
-	header packets.PacketHeader
-	raw    interface{}
-}
-
-func (ch process) readPacketsFromConn(ctx context.Context, conn *net.UDPConn, filter []uint) {
+func (ch *reader) read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 
 READ_UDP:
 	for {
@@ -225,38 +229,67 @@ READ_UDP:
 			log.Printf("processing package: %+v", pack)
 		}
 
-		ch <- struct {
-			header packets.PacketHeader
-			raw    interface{}
-		}{
-			header: *header,
-			raw:    pack,
+		ch.C <- &process.M{
+			Header: *header,
+			Pack:   pack,
+			Buffer: buf,
 		}
 
 	}
 }
 
-func (process) writePacketToWebsocket(pack struct {
-	header packets.PacketHeader
-	raw    interface{}
-}) {
-	socketPool.writeAll(pack.raw)
+type sqlwriter process.P
+
+func (ch *sqlwriter) write(m *process.M, db *streamdb.I) {
+	tx, err := db.Beginx()
+	if err != nil {
+		log.Printf("tx begin() error: %+v", err)
+		return
+	}
+	defer tx.Rollback()
+
+	err = (&sql.Packet{
+		Hostname:     ch.Hostname,
+		PacketHeader: m.Header,
+		Data:         m.Buffer,
+	}).Write(ch.Context, tx)
+	if err != nil {
+		log.Printf("tx write() error: %+v", err)
+		return
+	}
+
+	err = db.SoftSync(ch.Context)
+	if err != nil {
+		log.Printf("tx sync(1) error: %+v", err)
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("tx commit() error: %+v", err)
+		return
+	}
+
+	err = db.SoftSync(ch.Context)
+	if err != nil {
+		log.Printf("tx sync(2) error: %+v", err)
+		return
+	}
 }
 
-func (process) writePacketToHTTP(pack struct {
-	header packets.PacketHeader
-	raw    interface{}
-}, to string) {
+type httpwriter process.P
+
+func (*httpwriter) write(m *process.M, to string) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("%+v", err)
-			err = binary.Write(os.Stderr, binary.LittleEndian, pack)
+			err = binary.Write(os.Stderr, binary.LittleEndian, m.Pack)
 			if err != nil {
 				log.Printf("%+v", err)
 			}
 		}
 	}()
-	data, err := json.Marshal(pack.raw)
+	data, err := json.Marshal(m.Pack)
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +306,7 @@ func (process) writePacketToHTTP(pack struct {
 		return
 	}
 
-	req, err := http.NewRequest("POST", strings.ReplaceAll(to, "{{packetID}}", fmt.Sprintf("%d", pack.header.PacketID)), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", strings.ReplaceAll(to, "{{packetID}}", fmt.Sprintf("%d", m.Header.PacketID)), bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}
@@ -299,7 +332,7 @@ type socketHandler struct {
 	conns map[string]*websocket.Conn
 }
 
-func (s *socketHandler) writeAll(raw interface{}) {
+func (s *socketHandler) write(raw interface{}) {
 	failedHandles := make([]string, 0)
 
 	s.RLock()
@@ -337,7 +370,7 @@ func (s *socketHandler) unregisterConn(handle string) error {
 	return conn.Close()
 }
 
-func (s *socketHandler) handleWebsocketConn(ws *websocket.Conn) {
+func (s *socketHandler) handleConn(ws *websocket.Conn) {
 	handle := s.registerConn(ws)
 	defer s.unregisterConn(handle)
 	for {
@@ -359,7 +392,7 @@ func init() {
 	// io
 	bindCmd.Flags().IntVar(&udp, "udp", 20777, "UDP port to listen on; 20777 is the F1 2021/2022 default UDP port")
 	bindCmd.Flags().IntVar(&tcp, "tcp", -1, "TCP port to listen on for websocket connections; -1 means websocket is disabled")
-	bindCmd.Flags().StringVar(&post, "http", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
+	bindCmd.Flags().StringVar(&url, "http", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
 
 	// logging flags
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to the HTTP Server")

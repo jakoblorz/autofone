@@ -1,4 +1,4 @@
-package db
+package streamdb
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Instance struct {
+type I struct {
 	*sqlx.DB
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -23,16 +23,20 @@ type Instance struct {
 	debc func(func())
 }
 
-func (i *Instance) init() {
+func (i *I) init() {
 	i.ctx, i.cancel = context.WithCancel(context.Background())
-	i.debc = debounce.New(100 * time.Millisecond)
+	i.debc = debounce.New(2 * time.Second)
 }
 
-func (i *Instance) replicate() {
-	i.lsdb.Replicas[0].Sync(context.Background())
+func (i *I) replicate() error {
+	return i.lsdb.Replicas[0].Sync(context.Background())
 }
 
-func (i *Instance) Close() (err error) {
+func (i *I) tryreplicate() {
+	i.replicate()
+}
+
+func (i *I) Close() (err error) {
 	if i.DB != nil {
 		err = i.DB.Close()
 	}
@@ -42,16 +46,37 @@ func (i *Instance) Close() (err error) {
 	return
 }
 
-func (i *Instance) Commit(ctx context.Context) (err error) {
+func (i *I) HardSync(ctx context.Context) (err error) {
 	err = i.lsdb.Sync(ctx)
 	if err != nil {
 		return
 	}
-	i.debc(i.replicate)
+	err = i.replicate()
 	return
 }
 
-func (i *Instance) GCP(ctx context.Context, dsn string, bucket string) (*Instance, error) {
+func (i *I) SoftSync(ctx context.Context) (err error) {
+	err = i.lsdb.Sync(ctx)
+	if err != nil {
+		return
+	}
+	i.debc(i.tryreplicate)
+	return
+}
+
+func (i *I) MustSoftSync(ctx context.Context) {
+	if err := i.SoftSync(ctx); err != nil {
+		panic(err)
+	}
+}
+
+func (i *I) MustHardSync(ctx context.Context) {
+	if err := i.HardSync(ctx); err != nil {
+		panic(err)
+	}
+}
+
+func (i *I) GCP(ctx context.Context, dsn string, bucket string) (*I, error) {
 	var err error
 
 	i.init()
