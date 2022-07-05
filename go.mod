@@ -3,6 +3,7 @@ module github.com/jakoblorz/autofone
 go 1.16
 
 require (
+	cloud.google.com/go/storage v1.15.0 // indirect
 	github.com/benbjohnson/litestream v0.3.8
 	github.com/bep/debounce v1.2.1
 	github.com/jmoiron/sqlx v1.3.5

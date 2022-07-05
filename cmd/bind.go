@@ -99,7 +99,7 @@ for the packet ids to select.
 			}
 			sessionId := fmt.Sprintf("%s-%d", host, int64(float64(time.Now().UnixNano())*rand.New(rand.NewSource(time.Now().UnixNano())).Float64()))
 
-			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", fmt.Sprintf("gcs://packet-history/%s", host))
+			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", mac)
 			if err != nil {
 				log.Printf("%+v", err)
 				return

@@ -15,7 +15,7 @@ type Packet struct {
 
 func Init(db *sqlx.DB) (err error) {
 	_, err = db.Exec(`
-	CREATE TABLE packets (
+	CREATE TABLE IF NOT EXISTS packets (
 		Hostname TEXT,
 		PacketFormat TEXT,
 		GameMajorVersion INTEGER,
