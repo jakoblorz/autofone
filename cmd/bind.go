@@ -92,13 +92,6 @@ for the packet ids to select.
 				}()
 			}
 
-			host, err := os.Hostname()
-			if err != nil {
-				log.Printf("%+v", err)
-				return
-			}
-			sessionId := fmt.Sprintf("%s-%d", host, int64(float64(time.Now().UnixNano())*rand.New(rand.NewSource(time.Now().UnixNano())).Float64()))
-
 			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", mac)
 			if err != nil {
 				log.Printf("%+v", err)
@@ -117,7 +110,7 @@ for the packet ids to select.
 			stream := process.P{
 				Context:   ctx,
 				Hostname:  host,
-				SessionID: sessionId,
+				SessionID: sessionID,
 				C:         make(chan *process.M),
 			}
 			go func() {

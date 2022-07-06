@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/jakoblorz/autofone/pkg/log"
@@ -17,10 +19,12 @@ import (
 var (
 	verbose bool
 	mac     string
+	host    string
 
 	storageClient *storage.Client
 	storageBucket *storage.BucketHandle
 	projectID     = "autofone-355408"
+	sessionID     string
 
 	rootCmd = &cobra.Command{
 		Use: "autofone",
@@ -56,6 +60,13 @@ var (
 				log.Print(err)
 				return
 			}
+
+			host, err = os.Hostname()
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			sessionID = fmt.Sprintf("%s-%d", host, int64(float64(time.Now().UnixNano())*rand.New(rand.NewSource(time.Now().UnixNano())).Float64()))
 		},
 	}
 )
