@@ -1,4 +1,4 @@
-package streamdb
+package sql
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 
 type I struct {
 	*sqlx.DB
+
 	ctx    context.Context
 	cancel context.CancelFunc
 

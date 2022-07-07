@@ -18,13 +18,14 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/jakoblorz/autofone/database"
+
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/constants/event"
 	"github.com/jakoblorz/autofone/packets"
 	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/packets/sql"
 	"github.com/jakoblorz/autofone/pkg/log"
-	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
@@ -92,19 +93,21 @@ for the packet ids to select.
 				}()
 			}
 
-			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", mac)
+			db, err := database.Open(
+				database.WithGCP_SQL(ctx, "autofone.sqlite3", mac),
+			)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
 			}
-			defer db.Close()
+			defer db.SQL().Close()
 
-			err = sql.Init(db.DB)
+			err = sql.Init(db.SQL().DB)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
 			}
-			db.MustHardSync(ctx)
+			db.SQL().MustHardSync(ctx)
 
 			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
 			stream := process.P{
@@ -233,8 +236,8 @@ READ_UDP:
 
 type sqlwriter process.P
 
-func (ch *sqlwriter) write(m *process.M, db *streamdb.I) {
-	tx, err := db.Beginx()
+func (ch *sqlwriter) write(m *process.M, db database.I) {
+	tx, err := db.SQL().Beginx()
 	if err != nil {
 		log.Printf("tx begin() error: %+v", err)
 		return
@@ -251,7 +254,7 @@ func (ch *sqlwriter) write(m *process.M, db *streamdb.I) {
 		return
 	}
 
-	err = db.SoftSync(ch.Context)
+	err = db.SQL().SoftSync(ch.Context)
 	if err != nil {
 		log.Printf("tx sync(1) error: %+v", err)
 		return
@@ -263,7 +266,7 @@ func (ch *sqlwriter) write(m *process.M, db *streamdb.I) {
 		return
 	}
 
-	err = db.SoftSync(ch.Context)
+	err = db.SQL().SoftSync(ch.Context)
 	if err != nil {
 		log.Printf("tx sync(2) error: %+v", err)
 		return
