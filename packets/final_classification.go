@@ -8,7 +8,7 @@ package packets
 // Size: 839 bytes
 // Version: 1
 
-type FinalClassificationData struct {
+type FinalClassificationData21 struct {
 	Position         uint8    // Finishing position
 	NumLaps          uint8    // Number of laps completed
 	GridPosition     uint8    // Grid position of the car
@@ -23,10 +23,10 @@ type FinalClassificationData struct {
 	TyreStintsActual [8]uint8 // Actual tyres used by this driver
 	TyreStintsVisual [8]uint8 // Visual tyres used by this driver
 }
-type PacketFinalClassificationData struct {
+type PacketFinalClassificationData21 struct {
 	Header             PacketHeader // Header
 	NumCars            uint8        // Number of cars in the final classification
-	ClassificationData [22]FinalClassificationData
+	ClassificationData [22]FinalClassificationData21
 }
 
 type FinalClassificationData22 struct {

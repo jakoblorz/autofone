@@ -6,7 +6,7 @@ package packets
 // Size: 882 bytes
 // Version: 1
 
-type CarDamageData struct {
+type CarDamageData21 struct {
 	TyresWear            [4]float32 // Tyre wear (percentage)
 	TyresDamage          [4]uint8   // Tyre damage (percentage)
 	BrakesDamage         [4]uint8   // Brakes damage (percentage)
@@ -27,9 +27,9 @@ type CarDamageData struct {
 	EngineTCWear         uint8      // Engine wear TC (percentage)
 }
 
-type PacketCarDamageData struct {
+type PacketCarDamageData21 struct {
 	Header        PacketHeader // Header
-	CarDamageData [22]CarDamageData
+	CarDamageData [22]CarDamageData21
 }
 
 type CarDamageData22 struct {

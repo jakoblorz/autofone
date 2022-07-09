@@ -49,7 +49,7 @@ var (
 		},
 	}
 
-	motionData = packets.PacketMotionData{
+	motionData = packets.PacketMotionData21{
 		Header: packets.PacketHeader{
 			PacketFormat:            2020,
 			GameMajorVersion:        1,
@@ -62,7 +62,7 @@ var (
 			PlayerCarIndex:          19,
 			SecondaryPlayerCarIndex: 255,
 		},
-		CarMotionData:          [22]packets.CarMotionData{}, // empty
+		CarMotionData:          [22]packets.CarMotionData21{}, // empty
 		SuspensionPosition:     [4]float32{-0.6432814, 0.049691506, -0.122375205, -0.11044062},
 		SuspensionVelocity:     [4]float32{-5.7109776, -2.5368745, -0.33160102, 1.6033937},
 		SuspensionAcceleration: [4]float32{-742.09515, -298.6635, -38.07375, 275.05835},

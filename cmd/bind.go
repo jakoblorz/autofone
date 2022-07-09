@@ -407,38 +407,84 @@ func read(buf []byte, pack interface{}) error {
 func newPacketById(packetId uint8, packetFormat string) interface{} {
 	switch packetId {
 	case constants.PacketMotion:
-		return new(packets.PacketMotionData)
+		if packetFormat == "2022" {
+			return new(packets.PacketMotionData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketMotionData21)
+		}
 	case constants.PacketSession:
 		if packetFormat == "2022" {
 			return new(packets.PacketSessionData22)
 		}
-		return new(packets.PacketSessionData)
+		if packetFormat == "2021" {
+			return new(packets.PacketSessionData21)
+		}
 	case constants.PacketLap:
-		return new(packets.PacketLapData)
-	case constants.PacketEvent:
-		return new(packets.PrePacketEventData)
+		if packetFormat == "2022" {
+			return new(packets.PacketLapData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketLapData21)
+		}
 	case constants.PacketParticipants:
-		return new(packets.PacketParticipantsData)
+		if packetFormat == "2022" {
+			return new(packets.PacketCarDamageData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketCarDamageData21)
+		}
 	case constants.PacketCarSetup:
-		return new(packets.PacketCarSetupData)
+		if packetFormat == "2022" {
+			return new(packets.PacketCarSetupData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketCarSetupData21)
+		}
 	case constants.PacketCarTelemetry:
-		return new(packets.PacketCarTelemetryData)
+		if packetFormat == "2022" {
+			return new(packets.PacketCarTelemetryData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketCarTelemetryData21)
+		}
 	case constants.PacketCarStatus:
-		return new(packets.PacketCarStatusData)
+		if packetFormat == "2022" {
+			return new(packets.PacketCarStatusData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketCarStatusData21)
+		}
 	case constants.PacketFinalClassification:
 		if packetFormat == "2022" {
 			return new(packets.PacketFinalClassificationData22)
 		}
-		return new(packets.PacketFinalClassificationData)
+		if packetFormat == "2021" {
+			return new(packets.PacketFinalClassificationData21)
+		}
 	case constants.PacketLobbyInfo:
-		return new(packets.PacketLobbyInfoData)
+		if packetFormat == "2022" {
+			return new(packets.PacketLobbyInfoData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketLobbyInfoData21)
+		}
 	case constants.PacketCarDamage:
 		if packetFormat == "2022" {
 			return new(packets.PacketCarDamageData22)
 		}
-		return new(packets.PacketCarDamageData)
+		if packetFormat == "2021" {
+			return new(packets.PacketCarDamageData21)
+		}
 	case constants.PacketSessionHistory:
-		return new(packets.PacketSessionHistoryData)
+		if packetFormat == "2022" {
+			return new(packets.PacketSessionHistoryData22)
+		}
+		if packetFormat == "2021" {
+			return new(packets.PacketSessionHistoryData21)
+		}
+	case constants.PacketEvent:
+		return new(packets.PrePacketEventData)
 	}
 
 	return nil

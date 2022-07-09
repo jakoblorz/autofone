@@ -22,7 +22,7 @@ type WeatherForecastSample struct {
 	RainPercentage         uint8 // Rain percentage (0-100)
 }
 
-type PacketSessionData struct {
+type PacketSessionData21 struct {
 	Header                    PacketHeader
 	Weather                   uint8                     // Weather - 0 = clear, 1 = light cloud, 2 = overcast, 3 = light rain, 4 = heavy rain, 5 = storm
 	TrackTemperature          int8                      // Track temp. in degrees celsius
