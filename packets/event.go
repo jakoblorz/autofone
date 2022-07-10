@@ -34,13 +34,13 @@ type Penalty struct {
 }
 
 type SpeedTrap struct {
-	VehicleIdx              uint8   // Vehicle index of the vehicle triggering speed trap
-	Speed                   float32 // Top speed achieved in kilometres per hour
-	OverallFastestInSession uint8   // Overall fastest speed in session = 1, otherwise 0
-	DriverFastestInSession  uint8   // Fastest speed for driver in session = 1, otherwise 0
+	VehicleIdx                uint8   // Vehicle index of the vehicle triggering speed trap
+	Speed                     float32 // Top speed achieved in kilometres per hour
+	IsOverallFastestInSession uint8   // Overall fastest speed in session = 1, otherwise 0
+	IsDriverFastestInSession  uint8   // Fastest speed for driver in session = 1, otherwise 0
 }
 
-type SpeedTrapF22 struct {
+type SpeedTrap22 struct {
 	VehicleIdx                 uint8   // Vehicle index of the vehicle triggering speed trap
 	Speed                      float32 // Top speed achieved in kilometres per hour
 	IsOverallFastestInSession  uint8   // Overall fastest speed in session = 1, otherwise 0
