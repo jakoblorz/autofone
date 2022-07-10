@@ -14,12 +14,12 @@ type CarMotionData21 struct {
 	WorldVelocityX     float32 // Velocity in world space X
 	WorldVelocityY     float32 // Velocity in world space Y
 	WorldVelocityZ     float32 // Velocity in world space Z
-	WorldForwardDirX   int16   // World space forward X direction (normalised)
-	WorldForwardDirY   int16   // World space forward Y direction (normalised)
-	WorldForwardDirZ   int16   // World space forward Z direction (normalised)
-	WorldRightDirX     int16   // World space right X direction (normalised)
-	WorldRightDirY     int16   // World space right Y direction (normalised)
-	WorldRightDirZ     int16   // World space right Z direction (normalised)
+	WorldForwardDirX   uint16  // World space forward X direction (normalised)
+	WorldForwardDirY   uint16  // World space forward Y direction (normalised)
+	WorldForwardDirZ   uint16  // World space forward Z direction (normalised)
+	WorldRightDirX     uint16  // World space right X direction (normalised)
+	WorldRightDirY     uint16  // World space right Y direction (normalised)
+	WorldRightDirZ     uint16  // World space right Z direction (normalised)
 	GForceLateral      float32 // Lateral G-Force component
 	GForceLongitudinal float32 // Longitudinal G-Force component
 	GForceVertical     float32 // Vertical G-Force component

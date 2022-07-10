@@ -6,15 +6,15 @@ package packets
 // Size: 35 bytes
 // Version: 1
 
-type FastestLap struct {
+type FastestLap21 struct {
 	VehicleIdx uint8   // Vehicle index of car achieving fastest lap
 	LapTime    float32 // Lap time is in seconds
 }
 
-type PacketEventFastestLap struct {
+type PacketEventFastestLap21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8   // Event string code, see below
-	EventDetails    FastestLap // Event details - should be interpreted differently
+	EventStringCode [4]uint8     // Event string code, see below
+	EventDetails    FastestLap21 // Event details - should be interpreted differently
 }
 
 type FastestLap22 struct {
@@ -28,7 +28,7 @@ type PacketEventFastestLap22 struct {
 	EventDetails    FastestLap22 // Event details - should be interpreted differently
 }
 
-type Penalty struct {
+type Penalty21 struct {
 	PenaltyType      uint8 // Penalty type – see docs/TYPES.md#penalty-types
 	InfringementType uint8 // Infringement type – see docs/TYPES.md#infringement-types
 	VehicleIdx       uint8 // Vehicle index of the car the penalty is applied to
@@ -38,10 +38,10 @@ type Penalty struct {
 	PlacesGained     uint8 // Number of places gained by this
 }
 
-type PacketEventPenalty struct {
+type PacketEventPenalty21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8 // Event string code, see below
-	EventDetails    Penalty  // Event details - should be interpreted differently
+	EventStringCode [4]uint8  // Event string code, see below
+	EventDetails    Penalty21 // Event details - should be interpreted differently
 }
 
 type Penalty22 struct {
@@ -60,17 +60,17 @@ type PacketEventPenalty22 struct {
 	EventDetails    Penalty22 // Event details - should be interpreted differently
 }
 
-type SpeedTrap struct {
+type SpeedTrap21 struct {
 	VehicleIdx                uint8   // Vehicle index of the vehicle triggering speed trap
 	Speed                     float32 // Top speed achieved in kilometres per hour
 	IsOverallFastestInSession uint8   // Overall fastest speed in session = 1, otherwise 0
 	IsDriverFastestInSession  uint8   // Fastest speed for driver in session = 1, otherwise 0
 }
 
-type PacketEventSpeedTrap struct {
+type PacketEventSpeedTrap21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8  // Event string code, see below
-	EventDetails    SpeedTrap // Event details - should be interpreted differently
+	EventStringCode [4]uint8    // Event string code, see below
+	EventDetails    SpeedTrap21 // Event details - should be interpreted differently
 }
 
 type SpeedTrap22 struct {
@@ -88,14 +88,14 @@ type PacketEventSpeedTrap22 struct {
 	EventDetails    SpeedTrap22 // Event details - should be interpreted differently
 }
 
-type StartLights struct {
+type StartLights21 struct {
 	NumLights uint8 // Number of lights showing
 }
 
-type PacketEventStartLights struct {
+type PacketEventStartLights21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8    // Event string code, see below
-	EventDetails    StartLights // Event details - should be interpreted differently
+	EventStringCode [4]uint8      // Event string code, see below
+	EventDetails    StartLights21 // Event details - should be interpreted differently
 }
 
 type StartLights22 struct {
@@ -108,15 +108,15 @@ type PacketEventStartLights22 struct {
 	EventDetails    StartLights22 // Event details - should be interpreted differently
 }
 
-type Flashback struct {
+type Flashback21 struct {
 	FlashbackFrameIdentifier uint32  // Frame identifier flashed back to
 	FlashbackSessionTime     float32 // Session time flashed back to
 }
 
-type PacketEventFlashback struct {
+type PacketEventFlashback21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8  // Event string code, see below
-	EventDetails    Flashback // Event details - should be interpreted differently
+	EventStringCode [4]uint8    // Event string code, see below
+	EventDetails    Flashback21 // Event details - should be interpreted differently
 }
 type Flashback22 struct {
 	FlashbackFrameIdentifier uint32  // Frame identifier flashed back to
@@ -129,14 +129,14 @@ type PacketEventFlashback22 struct {
 	EventDetails    Flashback22 // Event details - should be interpreted differently
 }
 
-type Buttons struct {
+type Buttons21 struct {
 	ButtonStatus uint32 // Bit flags specifying which buttons are being pressed currently - see appendices
 }
 
-type PacketEventButtons struct {
+type PacketEventButtons21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8 // Event string code, see below
-	EventDetails    Buttons  // Event details - should be interpreted differently
+	EventStringCode [4]uint8  // Event string code, see below
+	EventDetails    Buttons21 // Event details - should be interpreted differently
 }
 
 type Buttons22 struct {
@@ -149,14 +149,14 @@ type PacketEventButtons22 struct {
 	EventDetails    Buttons22 // Event details - should be interpreted differently
 }
 
-type GenericVehicleEvent struct {
+type GenericVehicleEvent21 struct {
 	VehicleIdx uint8 // Vehicle index
 }
 
-type PacketEventGenericVehicleEvent struct {
+type PacketEventGenericVehicleEvent21 struct {
 	Header          PacketHeader
-	EventStringCode [4]uint8            // Event string code, see below
-	EventDetails    GenericVehicleEvent // Event details - should be interpreted differently
+	EventStringCode [4]uint8              // Event string code, see below
+	EventDetails    GenericVehicleEvent21 // Event details - should be interpreted differently
 }
 type GenericVehicleEvent22 struct {
 	VehicleIdx uint8 // Vehicle index
@@ -168,7 +168,7 @@ type PacketEventGenericVehicleEvent22 struct {
 	EventDetails    GenericVehicleEvent22 // Event details - should be interpreted differently
 }
 
-type PacketEventGenericSessionEvent struct {
+type PacketEventGenericSessionEvent21 struct {
 	Header          PacketHeader
 	EventStringCode [4]uint8 // Event string code, see below
 }
