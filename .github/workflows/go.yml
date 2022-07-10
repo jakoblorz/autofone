@@ -31,14 +31,14 @@ jobs:
 
     - name: Build
       run: |
-        GOOS=darwin GOARCH=amd64 go build -o autofone-darwin.amd64 -v .
-        GOOS=darwin GOARCH=arm64 go build -o autofone-darwin.arm64 -v .
-        GOOS=linux GOARCH=amd64 go build -o autofone-linux.amd64 -v .
-        GOOS=linux GOARCH=arm64 go build -o autofone-linux.arm64 -v .
-        GOOS=linux GOARCH=ppc64 go build -o autofone-linux.ppc64 -v .
+        GOOS=darwin GOARCH=amd64 go build -o autofone-darwin.amd64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+        GOOS=darwin GOARCH=arm64 go build -o autofone-darwin.arm64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+        GOOS=linux GOARCH=amd64 go build -o autofone-linux.amd64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+        GOOS=linux GOARCH=arm64 go build -o autofone-linux.arm64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+        GOOS=linux GOARCH=ppc64 go build -o autofone-linux.ppc64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
         
     - name: Build Windows
-      run: GOOS=windows go build -o autofone.exe -v .
+      run: GOOS=windows go build -o autofone.exe -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
       
     - name: Create Release
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -46,7 +46,7 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         prerelease: true
-        title: "Development Build"
+        title: "Nightly Build"
         files: |
           ./**/*.exe
           ./**/*.arm64

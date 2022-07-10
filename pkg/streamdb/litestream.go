@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/litestream"
-	"github.com/benbjohnson/litestream/gcs"
 	"github.com/bep/debounce"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -76,13 +75,11 @@ func (i *I) MustHardSync(ctx context.Context) {
 	}
 }
 
-func (i *I) GCP(ctx context.Context, dsn string, bucket string) (*I, error) {
+func (i *I) Replicated(ctx context.Context, dsn string, replica litestream.ReplicaClient) (*I, error) {
+
 	var err error
 
 	i.init()
-
-	replica := gcs.NewReplicaClient()
-	replica.Bucket = bucket
 
 	i.lsdb, err = replicate(ctx, dsn, replica, "gcs")
 	if err != nil {

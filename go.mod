@@ -3,7 +3,7 @@ module github.com/jakoblorz/autofone
 go 1.16
 
 require (
-	cloud.google.com/go/storage v1.15.0 // indirect
+	cloud.google.com/go/storage v1.15.0
 	github.com/benbjohnson/litestream v0.3.8
 	github.com/bep/debounce v1.2.1
 	github.com/jmoiron/sqlx v1.3.5
@@ -13,5 +13,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed
+	google.golang.org/api v0.45.0
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 )

@@ -23,6 +23,7 @@ import (
 	"github.com/jakoblorz/autofone/packets"
 	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/packets/sql"
+	"github.com/jakoblorz/autofone/pkg/gcs"
 	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
@@ -92,7 +93,11 @@ for the packet ids to select.
 				}()
 			}
 
-			db, err := new(streamdb.I).GCP(ctx, "autofone.sqlite3", mac)
+			replica := gcs.NewReplicaClient()
+			replica.Path = mac
+			replica.Bucket = storageBucket
+
+			db, err := new(streamdb.I).Replicated(ctx, "autofone.sqlite3", replica.WithClient(storageClient))
 			if err != nil {
 				log.Printf("%+v", err)
 				return

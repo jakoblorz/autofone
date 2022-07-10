@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -9,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"google.golang.org/api/option"
 
 	"cloud.google.com/go/storage"
 	"github.com/jakoblorz/autofone/pkg/log"
@@ -21,8 +24,10 @@ var (
 	mac     string
 	host    string
 
+	credentialJSON string
+
 	storageClient *storage.Client
-	storageBucket *storage.BucketHandle
+	storageBucket = "streamdb-content"
 	projectID     = "autofone-355408"
 	sessionID     string
 
@@ -34,6 +39,12 @@ var (
 				config = zap.NewDevelopmentConfig()
 			}
 			log.DefaultLogger, _ = config.Build()
+
+			credentialData, err := base64.StdEncoding.DecodeString(credentialJSON)
+			if err != nil {
+				log.Print(err)
+				return
+			}
 
 			macAddresses, err := getMacAddr()
 			if err != nil {
@@ -47,16 +58,8 @@ var (
 			mac = strings.ReplaceAll(macAddresses[0], ":", "")
 			log.Printf("Using MAC Address %s for identification", mac)
 
-			storageClient, err = storage.NewClient(context.Background())
+			storageClient, err = storage.NewClient(context.Background(), option.WithCredentialsJSON(credentialData))
 			if err != nil {
-				log.Print(err)
-				return
-			}
-
-			storageBucket = storageClient.Bucket(mac)
-			if err := storageBucket.Create(context.Background(), projectID, &storage.BucketAttrs{
-				Location: "europe-west3",
-			}); err != nil {
 				log.Print(err)
 				return
 			}
