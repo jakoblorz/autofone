@@ -1,8 +1,13 @@
 package packets
 
-type PacketParticipantsData interface {
+type ParticipantData interface {
 	NameToString() string
 }
+
+var (
+	_ ParticipantData = (*ParticipantData21)(nil)
+	_ ParticipantData = (*ParticipantData22)(nil)
+)
 
 // This is a list of participants in the race. If the vehicle is controlled by AI, then the name will be the driver name.
 // If this is a multiplayer game, the names will be the Steam Id on PC, or the LAN name if appropriate.
@@ -37,7 +42,7 @@ func (p *ParticipantData21) NameToString() string {
 // If this is a multiplayer game, the names will be the Steam Id on PC, or the LAN name if appropriate.
 
 // Frequency: Every 5 seconds
-// Size: 1213 bytes
+// Size: 1257 bytes
 // Version: 1
 
 type ParticipantData22 struct {

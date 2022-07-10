@@ -38,7 +38,7 @@ type PacketCarTelemetryData21 struct {
 // It details various values that would be recorded on the car such as speed, throttle application, DRS etc.
 
 // Frequency: Rate as specified in menus
-// Size: 1307 bytes
+// Size: 1357 bytes
 // Version: 1
 
 type CarTelemetryData22 struct {
