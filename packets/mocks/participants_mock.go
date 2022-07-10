@@ -242,6 +242,8 @@ var (
 				Name:          [48]byte{},
 				YourTelemetry: 0,
 			},
+			{},
+			{},
 		},
 	}
 )

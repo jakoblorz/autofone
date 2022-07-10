@@ -61,7 +61,7 @@ type PacketSessionData21 struct {
 	ERSAssist                 uint8                       // 0 = off, 1 = on
 	DRSAssist                 uint8                       // 0 = off, 1 = on
 	DynamicRacingLine         uint8                       // 0 = off, 1 = corners only, 2 = full
-	DynamicRangeLineType      uint8                       // 0 = 2D, 1 = 3D
+	DynamicRacingLineType     uint8                       // 0 = 2D, 1 = 3D
 }
 
 // The session packet includes details about the current session in progress.
