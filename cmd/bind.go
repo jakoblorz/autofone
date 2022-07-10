@@ -16,7 +16,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unsafe"
 
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/constants/event"
@@ -195,7 +194,7 @@ READ_UDP:
 			log.Print(message)
 		}
 
-		pack := newPacketById(header.PacketID, fmt.Sprint(header.PacketFormat))
+		pack := newPacketById(header.PacketID, header.PacketFormat)
 		if pack == nil {
 			log.Printf("invalid packet: %d", header.PacketID)
 			continue
@@ -207,19 +206,15 @@ READ_UDP:
 		}
 
 		if header.PacketID == constants.PacketEvent {
-			details := resolveEventDetails(pack.(*packets.PrePacketEventData))
-			pre := pack.(*packets.PrePacketEventData)
-			if details != nil {
-				err = read(pre.EventDetails[:unsafe.Sizeof(details)], details)
-				if err != nil {
-					log.Printf("event packet details read error: %+v", err)
-					continue
-				}
+			h := pack.(*packets.PacketEventHeader)
+			pack = newPacketByHeader(h, header.PacketFormat)
+			if pack == nil {
+				log.Printf("invalid event packet: %d", header.PacketID)
+				continue
 			}
-			pack = &packets.PacketEventData{
-				Header:          pre.Header,
-				EventStringCode: pre.EventStringCode,
-				EventDetails:    details,
+			if err = read(buf, pack); err != nil {
+				log.Printf("failed to read event packet %d: %+v", header.PacketID, err)
+				continue
 			}
 		}
 
@@ -409,109 +404,161 @@ func read(buf []byte, pack interface{}) error {
 	return nil
 }
 
-func newPacketById(packetId uint8, packetFormat string) interface{} {
+func newPacketById(packetId uint8, packetFormat uint16) interface{} {
 	switch packetId {
 	case constants.PacketMotion:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketMotionData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketMotionData21)
 		}
 	case constants.PacketSession:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketSessionData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketSessionData21)
 		}
 	case constants.PacketLap:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketLapData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketLapData21)
 		}
 	case constants.PacketParticipants:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketCarDamageData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketCarDamageData21)
 		}
 	case constants.PacketCarSetup:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketCarSetupData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketCarSetupData21)
 		}
 	case constants.PacketCarTelemetry:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketCarTelemetryData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketCarTelemetryData21)
 		}
 	case constants.PacketCarStatus:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketCarStatusData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketCarStatusData21)
 		}
 	case constants.PacketFinalClassification:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketFinalClassificationData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketFinalClassificationData21)
 		}
 	case constants.PacketLobbyInfo:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketLobbyInfoData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketLobbyInfoData21)
 		}
 	case constants.PacketCarDamage:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketCarDamageData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketCarDamageData21)
 		}
 	case constants.PacketSessionHistory:
-		if packetFormat == "2022" {
+		if packetFormat == constants.PacketFormat_2022 {
 			return new(packets.PacketSessionHistoryData22)
 		}
-		if packetFormat == "2021" {
+		if packetFormat == constants.PacketFormat_2021 {
 			return new(packets.PacketSessionHistoryData21)
 		}
 	case constants.PacketEvent:
-		return new(packets.PrePacketEventData)
+		return new(packets.PacketEventHeader)
 	}
 
 	return nil
 }
 
-func resolveEventDetails(pre *packets.PrePacketEventData) interface{} {
-	switch string(pre.EventStringCode[:]) {
+func newPacketByHeader(h *packets.PacketEventHeader, packetFormat uint16) interface{} {
+	switch h.EventCodeString() {
 	case event.FastestLap:
-		return new(packets.FastestLap)
-	case event.Retirement:
-		return new(packets.Retirement)
-	case event.TeamMateInPit:
-		return new(packets.TeamMateInPits)
-	case event.RaceWinner:
-		return new(packets.RaceWinner)
-	case event.PenaltyIssued:
-		return new(packets.Penalty)
-	case event.SpeedTrapTriggered:
-		if fmt.Sprint(pre.Header.PacketFormat) == "2022" {
-			return new(packets.SpeedTrap22)
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventFastestLap22)
 		}
-		return new(packets.SpeedTrap)
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventFastestLap)
+		}
+	case event.SpeedTrapTriggered:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventSpeedTrap22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventSpeedTrap)
+		}
+	case event.PenaltyIssued:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventPenalty22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventPenalty)
+		}
+	case event.Flashback:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventFlashback22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventFlashback)
+		}
+	case event.StartLights:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventStartLights22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventStartLights)
+		}
+	case event.ButtonStatus:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventButtons22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventButtons)
+		}
+
+	case event.Retirement:
+	case event.TeamMateInPit:
+	case event.RaceWinner:
+	case event.DriveThroughServed:
+	case event.StopGoServed:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventGenericVehicleEvent22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventGenericVehicleEvent)
+		}
+
+	case event.SessionStarted:
+	case event.SessionEnded:
+	case event.DRSEnabled:
+	case event.DRSDisabled:
+	case event.ChequeredFlag:
+	case event.LightsOut:
+		if packetFormat == constants.PacketFormat_2022 {
+			return new(packets.PacketEventGenericSessionEvent22)
+		}
+		if packetFormat == constants.PacketFormat_2021 {
+			return new(packets.PacketEventGenericSessionEvent)
+		}
 	}
 
 	return nil
