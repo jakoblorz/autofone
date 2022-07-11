@@ -34,8 +34,8 @@ func TestUDP_read(t *testing.T) {
 		createTestCase("PacketCarTelemetryData21", mocks.PacketCarTelemetryData21Bytes, &mocks.PacketCarTelemetryData21),
 		createTestCase("PacketEventButtons21", mocks.PacketEventButtons21Bytes, &mocks.PacketEventButtons21),
 		createTestCase("PacketLapData21", mocks.PacketLapData21Bytes, &mocks.PacketLapData21),
-		createTestCase("PacketMotionData21Bytes", mocks.PacketMotionData21Bytes, &mocks.PacketMotionData21),
-		createTestCase("PacketParticipantsData21Bytes", mocks.PacketParticipantsData21Bytes, &mocks.PacketParticipantsData21),
+		createTestCase("PacketMotionData21", mocks.PacketMotionData21Bytes, &mocks.PacketMotionData21),
+		createTestCase("PacketParticipantsData21", mocks.PacketParticipantsData21Bytes, &mocks.PacketParticipantsData21),
 		createTestCase("PacketSessionData21", mocks.PacketSessionData21Bytes, &mocks.PacketSessionData21),
 	}
 
