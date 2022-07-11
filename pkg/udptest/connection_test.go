@@ -14,18 +14,17 @@ type TestMsg struct {
 }
 
 func TestNewConn(t *testing.T) {
-	t.Run("read client", func(t *testing.T) {
-		clientCh := make(chan net.Conn)
-		go func() {
-			defer close(clientCh)
-			binary.Write(<-clientCh, binary.LittleEndian, &TestMsg{12})
-		}()
+	clientCh := make(chan net.Conn)
+	go func() {
+		defer close(clientCh)
+		binary.Write(<-clientCh, binary.LittleEndian, &TestMsg{12})
+	}()
 
-		var received TestMsg
-		assert.NoError(t, NewConn(func(clientConn, serverConn net.Conn) error {
-			clientCh <- clientConn
-			return binary.Read(serverConn, binary.LittleEndian, &received)
-		}, time.Second))
-		assert.Equal(t, uint16(12), received.Value)
-	})
+	var received TestMsg
+	assert.NoError(t, NewConn(func(clientConn, serverConn net.Conn) error {
+		clientCh <- clientConn
+		return binary.Read(serverConn, binary.LittleEndian, &received)
+	}, time.Second))
+	assert.Equal(t, uint16(12), received.Value)
+
 }
