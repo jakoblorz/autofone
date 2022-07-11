@@ -85,20 +85,16 @@ func TestMotion(t *testing.T) {
 	}
 }
 
-// func TestParticipants(t *testing.T) {
-// 	cs := packets.PacketParticipantsData21{}
-// 	err := read(mocks.PacketParticipantsData21Bytes, &cs)
-// 	if !assert.NoError(t, err, "should correctly unpack participants data") {
-// 		t.Fail()
-// 	}
-// 	// hack to prevent name comparison
-// 	for i := range cs.Participants {
-// 		cs.Participants[i].Name = [48]byte{}
-// 	}
-// 	if !assert.Equal(t, mocks.PacketParticipantsData21, cs, "should correctly read participants data") {
-// 		t.Fail()
-// 	}
-// }
+func TestParticipants(t *testing.T) {
+	cs := packets.PacketParticipantsData21{}
+	err := read(mocks.PacketParticipantsData21Bytes, &cs)
+	if !assert.NoError(t, err, "should correctly unpack participants data") {
+		t.Fail()
+	}
+	if !assert.Equal(t, mocks.PacketParticipantsData21, cs, "should correctly read participants data") {
+		t.Fail()
+	}
+}
 
 func TestSession(t *testing.T) {
 	cs := packets.PacketSessionData21{}
