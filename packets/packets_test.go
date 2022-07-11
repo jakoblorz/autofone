@@ -43,11 +43,11 @@ func TestCarStatus(t *testing.T) {
 
 func TestCarTelemetry(t *testing.T) {
 	cs := packets.PacketCarTelemetryData21{}
-	err := read(mocks.PacketCarTelemetry21Bytes, &cs)
+	err := read(mocks.PacketCarTelemetryData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack car telemetry data") {
 		t.Fail()
 	}
-	if !assert.Equal(t, mocks.PacketCarTelemetry21, cs, "should correctly read car telemetry data") {
+	if !assert.Equal(t, mocks.PacketCarTelemetryData21, cs, "should correctly read car telemetry data") {
 		t.Fail()
 	}
 }

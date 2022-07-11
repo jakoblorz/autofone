@@ -30,10 +30,10 @@ func ByPacketID(packetId uint8, packetFormat uint16) interface{} {
 		}
 	case constants.PacketParticipants:
 		if packetFormat == constants.PacketFormat_2022 {
-			return new(PacketCarDamageData22)
+			return new(PacketParticipantsData22)
 		}
 		if packetFormat == constants.PacketFormat_2021 {
-			return new(PacketCarDamageData21)
+			return new(PacketParticipantsData21)
 		}
 	case constants.PacketCarSetup:
 		if packetFormat == constants.PacketFormat_2022 {
