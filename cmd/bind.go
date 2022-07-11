@@ -1,25 +1,17 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
-	"sync"
-	"time"
 
 	"github.com/jakoblorz/autofone/constants"
-	"github.com/jakoblorz/autofone/packets"
 	"github.com/jakoblorz/autofone/packets/process"
+	"github.com/jakoblorz/autofone/packets/process/reader"
+	"github.com/jakoblorz/autofone/packets/process/writer"
 	"github.com/jakoblorz/autofone/packets/sql"
 	"github.com/jakoblorz/autofone/pkg/gcs"
 	"github.com/jakoblorz/autofone/pkg/log"
@@ -38,18 +30,6 @@ var (
 	logRaw  bool
 
 	devMode bool
-
-	socketPool = &socketHandler{
-		RWMutex: new(sync.RWMutex),
-		Source:  rand.NewSource(time.Now().UnixNano()),
-		conns:   make(map[string]*websocket.Conn),
-	}
-
-	clientPool = &sync.Pool{
-		New: func() interface{} {
-			return &http.Client{}
-		},
-	}
 
 	bindCmd = &cobra.Command{
 		Use:   "bind",
@@ -78,8 +58,9 @@ for the packet ids to select.
 			}
 			defer conn.Close()
 
+			receivers := writer.NewReceiverRegistry()
 			if tcp > 0 {
-				http.Handle("/", websocket.Handler(socketPool.handleConn))
+				http.Handle("/", websocket.Handler(receivers.Handle))
 				go func() {
 					log.Verbosef("awaiting connections from 0.0.0.0:%d", tcp)
 					err := http.ListenAndServe(fmt.Sprintf(":%d", tcp), nil)
@@ -119,13 +100,28 @@ for the packet ids to select.
 			go func() {
 				defer close(stream.C)
 
-				r := reader(stream)
-				(&r).read(ctx, conn, filter)
+				udpr := reader.UDP{
+					P:       &stream,
+					LogPack: logPack,
+					LogRaw:  logRaw,
+					Verbose: verbose,
+				}
+				(&udpr).Read(ctx, conn, filter)
 			}()
 			go func() {
 				var (
-					dbwriter  = sqlwriter(stream)
-					urlwriter = httpwriter(stream)
+					sqlw = writer.SQL{
+						P: &stream,
+					}
+					urlw = writer.HTTP{
+						P:       &stream,
+						LogJSON: logJSON,
+						Verbose: verbose,
+					}
+					wssw = writer.Websocket{
+						P:                &stream,
+						ReceiverRegistry: &receivers,
+					}
 				)
 				for {
 					select {
@@ -137,9 +133,9 @@ for the packet ids to select.
 							}
 						}
 					case m := <-stream.C:
-						go (&dbwriter).write(m, db)
-						go (&urlwriter).write(m, url)
-						go socketPool.write(m.Pack)
+						go (&sqlw).Write(m, db)
+						go (&urlw).Write(m, url)
+						go (&wssw).Write(m.Pack)
 					}
 				}
 			}()
@@ -149,231 +145,6 @@ for the packet ids to select.
 		},
 	}
 )
-
-type reader process.P
-
-func (ch *reader) read(ctx context.Context, conn *net.UDPConn, filter []uint) {
-
-READ_UDP:
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		buf := make([]byte, 1024+1024/2)
-		n, _, err := conn.ReadFromUDP(buf)
-		if err != nil {
-			log.Printf("read error: %+v", err)
-			return
-		}
-
-		header := new(packets.PacketHeader)
-		if err = read(buf, header); err != nil {
-			log.Printf("%+v", err)
-			continue
-		}
-
-		var c uint8
-		for _, f := range filter {
-			c = uint8(f) ^ header.PacketID
-			if c == 0 {
-				break
-			}
-		}
-		if c != 0 {
-			log.Verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
-			continue READ_UDP
-		} else if verbose || logRaw {
-			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
-			if logRaw {
-				message = fmt.Sprintf("%s: %+b", message, buf)
-			}
-			log.Print(message)
-		}
-
-		pack := packets.ByPacketID(header.PacketID, header.PacketFormat)
-		if pack == nil {
-			log.Printf("invalid packet: %d", header.PacketID)
-			continue
-		}
-
-		if err = read(buf, pack); err != nil {
-			log.Printf("failed to read packet %d: %+v", header.PacketID, err)
-			continue
-		}
-
-		if header.PacketID == constants.PacketEvent {
-			h := pack.(*packets.PacketEventHeader)
-			pack = packets.ByEventHeader(h, header.PacketFormat)
-			if pack == nil {
-				log.Printf("invalid event packet: %d", header.PacketID)
-				continue
-			}
-			if err = read(buf, pack); err != nil {
-				log.Printf("failed to read event packet %d: %+v", header.PacketID, err)
-				continue
-			}
-		}
-
-		if logPack {
-			log.Printf("processing package: %+v", pack)
-		}
-
-		ch.C <- &process.M{
-			Header: *header,
-			Pack:   pack,
-			Buffer: buf,
-		}
-
-	}
-}
-
-type sqlwriter process.P
-
-func (ch *sqlwriter) write(m *process.M, db *streamdb.I) {
-	tx, err := db.Beginx()
-	if err != nil {
-		log.Printf("tx begin() error: %+v", err)
-		return
-	}
-	defer tx.Rollback()
-
-	err = (&sql.Packet{
-		Hostname:     ch.Hostname,
-		PacketHeader: m.Header,
-		Data:         m.Buffer,
-	}).Write(ch.Context, tx)
-	if err != nil {
-		log.Printf("tx write() error: %+v", err)
-		return
-	}
-
-	err = db.SoftSync(ch.Context)
-	if err != nil {
-		log.Printf("tx sync(1) error: %+v", err)
-		return
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		log.Printf("tx commit() error: %+v", err)
-		return
-	}
-
-	err = db.SoftSync(ch.Context)
-	if err != nil {
-		log.Printf("tx sync(2) error: %+v", err)
-		return
-	}
-}
-
-type httpwriter process.P
-
-func (*httpwriter) write(m *process.M, to string) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("%+v", err)
-			err = binary.Write(os.Stderr, binary.LittleEndian, m.Pack)
-			if err != nil {
-				log.Printf("%+v", err)
-			}
-		}
-	}()
-	data, err := json.Marshal(m.Pack)
-	if err != nil {
-		panic(err)
-	}
-
-	if verbose || logJSON {
-		message := fmt.Sprintf("posting with len = %d bytes json payload", len(data))
-		if logJSON {
-			message = fmt.Sprintf("%s: %s", message, string(data))
-		}
-		log.Print(message)
-	}
-
-	if len(to) == 0 {
-		return
-	}
-
-	req, err := http.NewRequest("POST", strings.ReplaceAll(to, "{{packetID}}", fmt.Sprintf("%d", m.Header.PacketID)), bytes.NewBuffer(data))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client := clientPool.Get().(*http.Client)
-	res, err := client.Do(req)
-	clientPool.Put(client)
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-
-	_, err = io.Copy(os.Stdout, res.Body)
-	if err != nil {
-		panic(err)
-	}
-}
-
-type socketHandler struct {
-	*sync.RWMutex
-	rand.Source
-	conns map[string]*websocket.Conn
-}
-
-func (s *socketHandler) write(raw interface{}) {
-	failedHandles := make([]string, 0)
-
-	s.RLock()
-	for handle, conn := range s.conns {
-		err := websocket.JSON.Send(conn, raw)
-		if err != nil {
-			log.Printf("%+v", err)
-			failedHandles = append(failedHandles, handle)
-		}
-	}
-	s.RUnlock()
-
-	for _, handle := range failedHandles {
-		s.unregisterConn(handle)
-	}
-}
-
-func (s *socketHandler) registerConn(conn *websocket.Conn) string {
-	handle := fmt.Sprintf("%s-%f", conn.RemoteAddr(), float64(time.Now().UnixNano())*rand.New(s.Source).Float64())
-	s.Lock()
-	s.conns[handle] = conn
-	s.Unlock()
-	return handle
-}
-
-func (s *socketHandler) unregisterConn(handle string) error {
-	s.Lock()
-	conn, ok := s.conns[handle]
-	if !ok {
-		s.Unlock()
-		return nil
-	}
-	delete(s.conns, handle)
-	s.Unlock()
-	return conn.Close()
-}
-
-func (s *socketHandler) handleConn(ws *websocket.Conn) {
-	handle := s.registerConn(ws)
-	defer s.unregisterConn(handle)
-	for {
-		// discard all messages
-		_, err := io.Copy(ioutil.Discard, ws)
-		if err != nil {
-			log.Printf("%+v", err)
-			break
-		}
-	}
-}
 
 func init() {
 	rootCmd.AddCommand(bindCmd)
@@ -392,13 +163,4 @@ func init() {
 	bindCmd.Flags().BoolVar(&logRaw, "bytes", false, "Log bytes received from the UDP socket")
 
 	bindCmd.Flags().BoolVar(&devMode, "dev", false, "Enable development mode")
-}
-
-func read(buf []byte, pack interface{}) error {
-	reader := bytes.NewReader(buf)
-	if err := binary.Read(reader, binary.LittleEndian, pack); err != nil {
-		return err
-	}
-
-	return nil
 }
