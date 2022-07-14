@@ -19,11 +19,10 @@ func (ch *SQL) Write(m *process.M, db *streamdb.I) {
 	}
 	defer tx.Rollback()
 
-	err = (&sql.Packet{
-		Hostname:     ch.Hostname,
-		PacketHeader: m.Header,
-		Data:         m.Buffer,
-	}).Write(ch.Context, tx)
+	err = sql.Packet{
+		Hostname: ch.Hostname,
+		Data:     m.Buffer,
+	}.WithPacketHeader(&m.Header).Write(ch.Context, tx)
 	if err != nil {
 		log.Printf("tx write() error: %+v", err)
 		return

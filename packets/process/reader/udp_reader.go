@@ -1,9 +1,7 @@
 package reader
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"net"
 
@@ -39,7 +37,7 @@ READ_UDP:
 		}
 
 		header := new(packets.PacketHeader)
-		if err = read(buf, header); err != nil {
+		if err = packets.Read_LE(buf, header); err != nil {
 			log.Printf("%+v", err)
 			continue
 		}
@@ -68,7 +66,7 @@ READ_UDP:
 			continue
 		}
 
-		if err = read(buf, pack); err != nil {
+		if err = packets.Read_LE(buf, pack); err != nil {
 			log.Printf("failed to read packet %d: %+v", header.PacketID, err)
 			continue
 		}
@@ -80,7 +78,7 @@ READ_UDP:
 				log.Printf("invalid event packet: %d", header.PacketID)
 				continue
 			}
-			if err = read(buf, pack); err != nil {
+			if err = packets.Read_LE(buf, pack); err != nil {
 				log.Printf("failed to read event packet %d: %+v", header.PacketID, err)
 				continue
 			}
@@ -97,13 +95,4 @@ READ_UDP:
 		}
 
 	}
-}
-
-func read(buf []byte, pack interface{}) error {
-	reader := bytes.NewReader(buf)
-	if err := binary.Read(reader, binary.LittleEndian, pack); err != nil {
-		return err
-	}
-
-	return nil
 }

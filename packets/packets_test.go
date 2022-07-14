@@ -1,8 +1,6 @@
 package packets_test
 
 import (
-	"bytes"
-	"encoding/binary"
 	"testing"
 
 	"github.com/jakoblorz/autofone/packets"
@@ -10,18 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func read(buf []byte, pack interface{}) error {
-	reader := bytes.NewReader(buf)
-	if err := binary.Read(reader, binary.LittleEndian, pack); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func TestCarSetup(t *testing.T) {
 	cs := packets.PacketCarSetupData21{}
-	err := read(mocks.PacketCarSetupData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketCarSetupData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack car status data") {
 		t.Fail()
 	}
@@ -32,7 +21,7 @@ func TestCarSetup(t *testing.T) {
 
 func TestCarStatus(t *testing.T) {
 	cs := packets.PacketCarStatusData21{}
-	err := read(mocks.PacketCarStatusData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketCarStatusData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack car status data") {
 		t.Fail()
 	}
@@ -43,7 +32,7 @@ func TestCarStatus(t *testing.T) {
 
 func TestCarTelemetry(t *testing.T) {
 	cs := packets.PacketCarTelemetryData21{}
-	err := read(mocks.PacketCarTelemetryData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketCarTelemetryData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack car telemetry data") {
 		t.Fail()
 	}
@@ -54,7 +43,7 @@ func TestCarTelemetry(t *testing.T) {
 
 func TestEventButtons(t *testing.T) {
 	cs := packets.PacketEventButtons21{}
-	err := read(mocks.PacketEventButtons21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketEventButtons21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack event data") {
 		t.Fail()
 	}
@@ -65,7 +54,7 @@ func TestEventButtons(t *testing.T) {
 
 func TestLap(t *testing.T) {
 	cs := packets.PacketLapData21{}
-	err := read(mocks.PacketLapData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketLapData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack lap data") {
 		t.Fail()
 	}
@@ -76,7 +65,7 @@ func TestLap(t *testing.T) {
 
 func TestMotion(t *testing.T) {
 	cs := packets.PacketMotionData21{}
-	err := read(mocks.PacketMotionData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketMotionData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack motion data") {
 		t.Fail()
 	}
@@ -87,7 +76,7 @@ func TestMotion(t *testing.T) {
 
 func TestParticipants(t *testing.T) {
 	cs := packets.PacketParticipantsData21{}
-	err := read(mocks.PacketParticipantsData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketParticipantsData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack participants data") {
 		t.Fail()
 	}
@@ -98,7 +87,7 @@ func TestParticipants(t *testing.T) {
 
 func TestSession(t *testing.T) {
 	cs := packets.PacketSessionData21{}
-	err := read(mocks.PacketSessionData21Bytes, &cs)
+	err := packets.Read_LE(mocks.PacketSessionData21Bytes, &cs)
 	if !assert.NoError(t, err, "should correctly unpack session data") {
 		t.Fail()
 	}

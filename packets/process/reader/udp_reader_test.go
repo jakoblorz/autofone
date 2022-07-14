@@ -59,7 +59,7 @@ func TestUDP_read(t *testing.T) {
 			}
 			if !assert.NoError(t, udptest.NewConn(func(clientConn, serverConn net.Conn) error {
 				clientCh <- clientConn
-				(&r).read(ctx, serverConn.(*net.UDPConn), []uint{})
+				(&r).Read(ctx, serverConn.(*net.UDPConn), []uint{})
 				return nil
 			}, 2*time.Second), "should be able to read from udp connection") {
 				t.Fail()

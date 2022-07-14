@@ -1,6 +1,9 @@
 package packets
 
 import (
+	"bytes"
+	"encoding/binary"
+
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/constants/event"
 )
@@ -163,4 +166,21 @@ func ByEventHeader(h *PacketEventHeader, packetFormat uint16) interface{} {
 	}
 
 	return nil
+}
+
+func Read_LE(buf []byte, pack interface{}) error {
+	reader := bytes.NewReader(buf)
+	if err := binary.Read(reader, binary.LittleEndian, pack); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Write_LE(pack interface{}) ([]byte, error) {
+	buf := bytes.NewBuffer([]byte{})
+	if err := binary.Write(buf, binary.LittleEndian, pack); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
