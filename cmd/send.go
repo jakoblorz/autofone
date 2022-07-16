@@ -3,11 +3,11 @@ package cmd
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
 	"net"
 
-	"github.com/jakoblorz/metrikxd/constants"
-	"github.com/jakoblorz/metrikxd/packets"
+	"github.com/jakoblorz/autofone/constants"
+	"github.com/jakoblorz/autofone/packets"
+	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var (
 				return
 			}
 
-			verbosef("dialing %s", addr.String())
+			log.Verbosef("dialing %s", addr.String())
 			conn, err := net.DialUDP("udp", nil, addr)
 			if err != nil {
 				log.Printf("%+v", err)
@@ -36,7 +36,7 @@ var (
 			if err != nil {
 				err = nil
 			} else {
-				verbosef("sending packet with id %d: %s", constants.PacketMotion, buf.String())
+				log.Verbosef("sending packet with id %d: %s", constants.PacketMotion, buf.String())
 			}
 
 			err = binary.Write(conn, binary.LittleEndian, &motionData)
@@ -49,7 +49,7 @@ var (
 		},
 	}
 
-	motionData = packets.PacketMotionData{
+	motionData = packets.PacketMotionData21{
 		Header: packets.PacketHeader{
 			PacketFormat:            2020,
 			GameMajorVersion:        1,
@@ -62,7 +62,7 @@ var (
 			PlayerCarIndex:          19,
 			SecondaryPlayerCarIndex: 255,
 		},
-		CarMotionData:          [22]packets.CarMotionData{}, // empty
+		CarMotionData:          [22]packets.CarMotionData21{}, // empty
 		SuspensionPosition:     [4]float32{-0.6432814, 0.049691506, -0.122375205, -0.11044062},
 		SuspensionVelocity:     [4]float32{-5.7109776, -2.5368745, -0.33160102, 1.6033937},
 		SuspensionAcceleration: [4]float32{-742.09515, -298.6635, -38.07375, 275.05835},

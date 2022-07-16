@@ -1,20 +1,18 @@
-module github.com/jakoblorz/metrikxd
+module github.com/jakoblorz/autofone
 
 go 1.16
 
 require (
-	entgo.io/ent v0.9.2-0.20210822190728-d84ac191b1c7
-	github.com/bxcodec/faker/v3 v3.6.0
-	github.com/go-chi/chi/v5 v5.0.7
-	github.com/gofiber/adaptor/v2 v2.1.15
-	github.com/gofiber/fiber/v2 v2.23.0
-	github.com/gofiber/template v1.6.20
-	github.com/jakoblorz/metricrendering v0.0.0-20220102182648-3e7b0bcbc0cc
-	github.com/mailru/easyjson v0.7.7
-	github.com/masseelch/elk v0.5.2
+	cloud.google.com/go/storage v1.15.0
+	github.com/benbjohnson/litestream v0.3.8
+	github.com/bep/debounce v1.2.1
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/kr/text v0.2.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
-	github.com/webview/webview v0.0.0-20210330151455-f540d88dde4e
-	github.com/zserge/metric v0.1.0
 	go.uber.org/zap v1.19.1
+	golang.org/x/net v0.0.0-20210510120150-4163338589ed
+	google.golang.org/api v0.45.0
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 )
