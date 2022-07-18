@@ -36,9 +36,15 @@ jobs:
         GOOS=linux GOARCH=amd64 go build -o autofone-linux.amd64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
         GOOS=linux GOARCH=arm64 go build -o autofone-linux.arm64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
         GOOS=linux GOARCH=ppc64 go build -o autofone-linux.ppc64 -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
-        
+
+    - name: Prepare CC Toolchain (MinGW)
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+
     - name: Build Windows
-      run: GOOS=windows go build -o autofone.exe -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+      run: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC="x86_64-w64-mingw32-gcc" go build -o autofone-amd64.exe -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
+        #  GOOS=windows GOARCH=386 CGO_ENABLED=1 CC="i686-w64-mingw32-gcc" go build -o autofone-i386.exe -ldflags="-X github.com/jakoblorz/autofone/cmd.credentialJSON=${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}" -v .
       
     - name: Create Release
       uses: "marvinpinto/action-automatic-releases@latest"
