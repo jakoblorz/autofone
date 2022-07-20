@@ -9,10 +9,12 @@ import (
 
 type SQL struct {
 	*process.P
+
+	DB *streamdb.I
 }
 
-func (ch *SQL) Write(m *process.M, db *streamdb.I) {
-	tx, err := db.Beginx()
+func (ch *SQL) Write(m *process.M) {
+	tx, err := ch.DB.Beginx()
 	if err != nil {
 		log.Printf("tx begin() error: %+v", err)
 		return
@@ -28,7 +30,7 @@ func (ch *SQL) Write(m *process.M, db *streamdb.I) {
 		return
 	}
 
-	err = db.SoftSync(ch.Context)
+	err = ch.DB.SoftSync(ch.Context)
 	if err != nil {
 		log.Printf("tx sync(1) error: %+v", err)
 		return
@@ -40,7 +42,7 @@ func (ch *SQL) Write(m *process.M, db *streamdb.I) {
 		return
 	}
 
-	err = db.SoftSync(ch.Context)
+	err = ch.DB.SoftSync(ch.Context)
 	if err != nil {
 		log.Printf("tx sync(2) error: %+v", err)
 		return

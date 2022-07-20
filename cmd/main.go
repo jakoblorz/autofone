@@ -14,7 +14,10 @@ import (
 	"google.golang.org/api/option"
 
 	"cloud.google.com/go/storage"
+	"github.com/jakoblorz/autofone/packets/sql"
+	"github.com/jakoblorz/autofone/pkg/gcs"
 	"github.com/jakoblorz/autofone/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -23,6 +26,8 @@ var (
 	verbose bool
 	mac     string
 	host    string
+
+	db *streamdb.I
 
 	credentialJSON string
 
@@ -70,6 +75,24 @@ var (
 				return
 			}
 			sessionID = fmt.Sprintf("%s-%d", host, int64(float64(time.Now().UnixNano())*rand.New(rand.NewSource(time.Now().UnixNano())).Float64()))
+
+			replica := gcs.NewReplicaClient()
+			replica.Path = mac
+			replica.Bucket = storageBucket
+
+			db, err = new(streamdb.I).Replicated(context.Background(), "autofone.sqlite3", replica.WithClient(storageClient))
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			defer db.Close()
+
+			err = sql.Init(db.DB)
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
+			db.MustHardSync(context.Background())
 		},
 	}
 )

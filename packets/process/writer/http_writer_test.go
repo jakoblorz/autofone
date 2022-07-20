@@ -83,12 +83,14 @@ func TestHTTP_Write(t *testing.T) {
 			}))
 			defer s.Close()
 
-			(&HTTP{}).Write(&process.M{
+			(&HTTP{
+				URL: fmt.Sprintf("%s/{{packetID}}", s.URL),
+			}).Write(&process.M{
 				Header: packets.PacketHeader{
 					PacketID: tt.packetID,
 				},
 				Pack: tt.data,
-			}, fmt.Sprintf("%s/{{packetID}}", s.URL))
+			})
 
 			<-sig
 		})

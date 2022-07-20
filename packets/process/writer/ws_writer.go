@@ -18,12 +18,12 @@ type Websocket struct {
 	*ReceiverRegistry
 }
 
-func (s *Websocket) Write(raw interface{}) {
+func (s *Websocket) Write(m *process.M) {
 	failedHandles := make([]string, 0)
 
 	s.RLock()
 	for handle, conn := range s.conns {
-		err := websocket.JSON.Send(conn, raw)
+		err := websocket.JSON.Send(conn, m.Pack)
 		if err != nil {
 			log.Printf("%+v", err)
 			failedHandles = append(failedHandles, handle)

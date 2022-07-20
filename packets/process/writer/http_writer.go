@@ -26,11 +26,12 @@ var (
 type HTTP struct {
 	*process.P
 
+	URL     string
 	Verbose bool
 	LogJSON bool
 }
 
-func (ch *HTTP) Write(m *process.M, to string) {
+func (ch *HTTP) Write(m *process.M) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("%+v", err)
@@ -53,11 +54,11 @@ func (ch *HTTP) Write(m *process.M, to string) {
 		log.Print(message)
 	}
 
-	if len(to) == 0 {
+	if len(ch.URL) == 0 {
 		return
 	}
 
-	req, err := http.NewRequest("POST", strings.ReplaceAll(to, "{{packetID}}", fmt.Sprintf("%d", m.Header.PacketID)), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", strings.ReplaceAll(ch.URL, "{{packetID}}", fmt.Sprintf("%d", m.Header.PacketID)), bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}

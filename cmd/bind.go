@@ -12,10 +12,7 @@ import (
 	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/packets/process/reader"
 	"github.com/jakoblorz/autofone/packets/process/writer"
-	"github.com/jakoblorz/autofone/packets/sql"
-	"github.com/jakoblorz/autofone/pkg/gcs"
 	"github.com/jakoblorz/autofone/pkg/log"
-	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
@@ -72,24 +69,6 @@ for the packet ids to select.
 				}()
 			}
 
-			replica := gcs.NewReplicaClient()
-			replica.Path = mac
-			replica.Bucket = storageBucket
-
-			db, err := new(streamdb.I).Replicated(ctx, "autofone.sqlite3", replica.WithClient(storageClient))
-			if err != nil {
-				log.Printf("%+v", err)
-				return
-			}
-			defer db.Close()
-
-			err = sql.Init(db.DB)
-			if err != nil {
-				log.Printf("%+v", err)
-				return
-			}
-			db.MustHardSync(ctx)
-
 			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
 			stream := process.P{
 				Context:   ctx,
@@ -99,7 +78,6 @@ for the packet ids to select.
 			}
 			go func() {
 				defer close(stream.C)
-
 				udpr := reader.UDP{
 					P:       &stream,
 					LogPack: logPack,
@@ -109,20 +87,22 @@ for the packet ids to select.
 				(&udpr).Read(ctx, conn, filter)
 			}()
 			go func() {
-				var (
-					sqlw = writer.SQL{
-						P: &stream,
-					}
-					urlw = writer.HTTP{
+				writers := []writer.Writer{
+					&writer.SQL{
+						P:  &stream,
+						DB: db,
+					},
+					&writer.HTTP{
 						P:       &stream,
+						URL:     url,
 						LogJSON: logJSON,
 						Verbose: verbose,
-					}
-					wssw = writer.Websocket{
+					},
+					&writer.Websocket{
 						P:                &stream,
 						ReceiverRegistry: &receivers,
-					}
-				)
+					},
+				}
 				for {
 					select {
 					case <-ctx.Done():
@@ -133,9 +113,9 @@ for the packet ids to select.
 							}
 						}
 					case m := <-stream.C:
-						go (&sqlw).Write(m, db)
-						go (&urlw).Write(m, url)
-						go (&wssw).Write(m.Pack)
+						for _, w := range writers {
+							go w.Write(m)
+						}
 					}
 				}
 			}()

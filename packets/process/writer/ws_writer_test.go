@@ -8,6 +8,7 @@ import (
 
 	"github.com/jakoblorz/autofone/packets"
 	"github.com/jakoblorz/autofone/packets/mocks"
+	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/pkg/wstest"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/websocket"
@@ -17,13 +18,13 @@ func TestWebsocket_Write(t *testing.T) {
 
 	type testCase struct {
 		name        string
-		data        interface{}
+		data        *process.M
 		decoderFunc func() interface{}
 	}
 	createTestCase := func(name string, data interface{}, decoderFunc func() interface{}) testCase {
 		return testCase{
 			name:        fmt.Sprintf("should write packet %s to websocket, encoded as JSON", name),
-			data:        data,
+			data:        &process.M{Pack: data},
 			decoderFunc: decoderFunc,
 		}
 	}
@@ -80,7 +81,7 @@ func TestWebsocket_Write(t *testing.T) {
 						return nil
 					}
 
-					if !assert.Equal(t, tt.data, decoded) {
+					if !assert.Equal(t, tt.data.Pack, decoded) {
 						t.Fail()
 						return nil
 					}
