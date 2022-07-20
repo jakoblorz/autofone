@@ -41,6 +41,8 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			defer db.Close()
+
 			sig := make(chan os.Signal, 1)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()

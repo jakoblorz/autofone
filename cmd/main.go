@@ -85,7 +85,6 @@ var (
 				log.Printf("%+v", err)
 				return
 			}
-			defer db.Close()
 
 			err = sql.Init(db.DB)
 			if err != nil {
