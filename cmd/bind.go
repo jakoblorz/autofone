@@ -59,7 +59,7 @@ for the packet ids to select.
 			if tcp > 0 {
 				http.Handle("/", websocket.Handler(receivers.Handle))
 				go func() {
-					log.Verbosef("awaiting connections from 0.0.0.0:%d", tcp)
+					log.Printf("awaiting connections from 0.0.0.0:%d", tcp)
 					err := http.ListenAndServe(fmt.Sprintf(":%d", tcp), nil)
 					if err != nil {
 						log.Printf("%+v", err)
@@ -69,7 +69,7 @@ for the packet ids to select.
 				}()
 			}
 
-			log.Verbosef("awaiting packets from %s", conn.LocalAddr().String())
+			log.Printf("awaiting packets from %s", conn.LocalAddr().String())
 			stream := process.P{
 				Context:   ctx,
 				Hostname:  host,

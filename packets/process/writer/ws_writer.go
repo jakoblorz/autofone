@@ -73,6 +73,9 @@ func (s *ReceiverRegistry) unregisterConn(handle string) error {
 func (s *ReceiverRegistry) Handle(ws *websocket.Conn) {
 	handle := s.registerConn(ws)
 	defer s.unregisterConn(handle)
+
+	log.Printf("new connection from %s, handle=%s", ws.RemoteAddr(), handle)
+
 	for {
 		// discard all messages
 		_, err := io.Copy(ioutil.Discard, ws)
