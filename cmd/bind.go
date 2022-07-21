@@ -90,9 +90,9 @@ for the packet ids to select.
 			}()
 			go func() {
 				writers := []writer.Writer{
-					&writer.SQL{
-						P:  &stream,
-						DB: db,
+					&writer.Websocket{
+						P:                &stream,
+						ReceiverRegistry: &receivers,
 					},
 					&writer.HTTP{
 						P:       &stream,
@@ -100,9 +100,9 @@ for the packet ids to select.
 						LogJSON: logJSON,
 						Verbose: verbose,
 					},
-					&writer.Websocket{
-						P:                &stream,
-						ReceiverRegistry: &receivers,
+					&writer.SQL{
+						P:  &stream,
+						DB: db,
 					},
 				}
 				for {
@@ -116,7 +116,14 @@ for the packet ids to select.
 						}
 					case m := <-stream.C:
 						for _, w := range writers {
-							go w.Write(m)
+							go func(w writer.Writer) {
+								defer func() {
+									if r := recover(); r != nil {
+										log.Printf("recovered from panic: %+v", r)
+									}
+								}()
+								w.Write(m)
+							}(w)
 						}
 					}
 				}
