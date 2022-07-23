@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/storage v1.15.0
 	github.com/benbjohnson/litestream v0.3.8
 	github.com/bep/debounce v1.2.1
+	github.com/boltdb/bolt v1.3.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-sqlite3 v1.14.14

@@ -13,6 +13,8 @@ import (
 	"github.com/jakoblorz/autofone/packets/process/reader"
 	"github.com/jakoblorz/autofone/packets/process/writer"
 	"github.com/jakoblorz/autofone/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/streamdb"
+	"github.com/jakoblorz/autofone/pkg/streamdb/gswriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
@@ -41,6 +43,11 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			db, err := streamdb.Open("autofone", gswriter.New(storageClient.Bucket(storageBucket), mac))
+			if err != nil {
+				log.Printf("%+v", err)
+				return
+			}
 			defer db.Close()
 
 			sig := make(chan os.Signal, 1)
@@ -100,7 +107,7 @@ for the packet ids to select.
 						LogJSON: logJSON,
 						Verbose: verbose,
 					},
-					&writer.SQL{
+					&writer.Bolt{
 						P:  &stream,
 						DB: db,
 					},
@@ -139,7 +146,7 @@ func init() {
 	rootCmd.AddCommand(bindCmd)
 
 	// settings
-	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(constants.PacketFinalClassification)}, "Filter the packets that are to be relayed, no filter means accepting all")
+	bindCmd.Flags().UintSliceVar(&filter, "filter", []uint{uint(constants.PacketFinalClassification) /*, uint(constants.PacketMotion) */}, "Filter the packets that are to be relayed, no filter means accepting all")
 
 	// io
 	bindCmd.Flags().IntVar(&udp, "udp", 20777, "UDP port to listen on; 20777 is the F1 2021/2022 default UDP port")
