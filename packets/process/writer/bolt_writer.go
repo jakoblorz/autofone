@@ -20,7 +20,7 @@ func (ch *Bolt) Write(m *process.M) {
 	h := ch.DB.Get()
 	defer ch.DB.Put(h)
 
-	id := fmt.Sprintf("%s-%020d", primitive.NewObjectID().Hex(), time.Now().Unix())
+	id := fmt.Sprintf("%s-%011d", primitive.NewObjectID().Hex(), time.Now().Unix())
 
 	h.Batch(func(tx *bolt.Tx) (err error) {
 		bkt, err := tx.CreateBucketIfNotExists([]byte{m.Header.PacketID})
