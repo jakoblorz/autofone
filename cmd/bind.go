@@ -13,8 +13,9 @@ import (
 	"github.com/jakoblorz/autofone/packets/process/reader"
 	"github.com/jakoblorz/autofone/packets/process/writer"
 	"github.com/jakoblorz/autofone/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/privateapi"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
-	"github.com/jakoblorz/autofone/pkg/streamdb/gswriter"
+	"github.com/jakoblorz/autofone/pkg/streamdb/httpwriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
@@ -27,6 +28,8 @@ var (
 	logJSON bool
 	logPack bool
 	logRaw  bool
+
+	token string
 
 	devMode bool
 
@@ -43,7 +46,15 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			db, err := streamdb.Open("autofone", gswriter.New(storageClient.Bucket(storageBucket), mac))
+
+			baseURL := "https://api.autofone.jakoblorz.de"
+			if devMode {
+				baseURL = "http://localhost:8080"
+			}
+			api := privateapi.New(token, baseURL)
+			defer api.Close()
+
+			db, err := streamdb.Open("autofone", httpwriter.New(api))
 			if err != nil {
 				log.Printf("%+v", err)
 				return
@@ -80,10 +91,9 @@ for the packet ids to select.
 
 			log.Printf("awaiting packets from %s", conn.LocalAddr().String())
 			stream := process.P{
-				Context:   ctx,
-				Hostname:  host,
-				SessionID: sessionID,
-				C:         make(chan *process.M),
+				Context:  ctx,
+				Hostname: host,
+				C:        make(chan *process.M),
 			}
 			go func() {
 				defer close(stream.C)
@@ -108,8 +118,9 @@ for the packet ids to select.
 						Verbose: verbose,
 					},
 					&writer.Bolt{
-						P:  &stream,
-						DB: db,
+						P:      &stream,
+						Client: api,
+						DB:     db,
 					},
 				}
 				for {
@@ -152,6 +163,9 @@ func init() {
 	bindCmd.Flags().IntVar(&udp, "udp", 20777, "UDP port to listen on; 20777 is the F1 2021/2022 default UDP port")
 	bindCmd.Flags().IntVar(&tcp, "tcp", -1, "TCP port to listen on for websocket connections; -1 means websocket is disabled")
 	bindCmd.Flags().StringVar(&url, "http", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
+
+	// auth
+	bindCmd.Flags().StringVar(&token, "token", "", "Token to authenticate against autofone.jakoblorz.de")
 
 	// logging flags
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to the HTTP Server")

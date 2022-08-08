@@ -6,12 +6,14 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/jakoblorz/autofone/packets/process"
+	"github.com/jakoblorz/autofone/pkg/privateapi"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Bolt struct {
 	*process.P
+	privateapi.Client
 
 	DB streamdb.I
 }
