@@ -10,6 +10,20 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+type DebounceMode string
+
+const (
+	DebounceModeDelay      DebounceMode = "delay"
+	DebounceModeActive     DebounceMode = "active"
+	DebounceModeAggressive DebounceMode = "aggressive"
+)
+
+const (
+	DebounceModeDelay_Interval      time.Duration = 1 * time.Minute
+	DebounceModeActive_Interval     time.Duration = 4 * time.Second
+	DebounceModeAggressive_Interval time.Duration = 250 * time.Millisecond
+)
+
 type Handle interface {
 	Batch(func(tx *bolt.Tx) error) error
 	Update(func(*bolt.Tx) error) error
@@ -45,16 +59,17 @@ type I interface {
 	Close() error
 }
 
-func Open(path string, fw FileWriter) (I, error) {
+func Open(path string, fw FileWriter, debounceMode DebounceMode) (I, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	w := &stream{
 		Path: path,
 
-		mx:         new(sync.RWMutex),
-		ctx:        ctx,
-		cancel:     cancel,
-		handleWg:   new(sync.WaitGroup),
-		debounceMx: new(sync.Mutex),
+		mx:           new(sync.RWMutex),
+		ctx:          ctx,
+		cancel:       cancel,
+		handleWg:     new(sync.WaitGroup),
+		debounceMx:   new(sync.Mutex),
+		debounceMode: debounceMode,
 	}
 	if err := w.open(); err != nil {
 		return nil, err
@@ -76,6 +91,7 @@ type stream struct {
 	handleDb *bolt.DB
 	handleWg *sync.WaitGroup
 
+	debounceMode  DebounceMode
 	debounceTimer *time.Timer
 	debounceMx    *sync.Mutex
 
@@ -88,10 +104,20 @@ func (i *stream) notify() {
 	i.debounceMx.Lock()
 	defer i.debounceMx.Unlock()
 
+	if i.debounceMode == DebounceModeDelay && i.debounceTimer == nil {
+		i.debounceTimer = time.AfterFunc(DebounceModeDelay_Interval, i.rotate)
+		return
+	}
+
 	if i.debounceTimer != nil {
 		i.debounceTimer.Stop()
 	}
-	i.debounceTimer = time.AfterFunc(10*time.Second, i.rotate)
+	if i.debounceMode == DebounceModeActive {
+		i.debounceTimer = time.AfterFunc(DebounceModeActive_Interval, i.rotate)
+	}
+	if i.debounceMode == DebounceModeAggressive {
+		i.debounceTimer = time.AfterFunc(DebounceModeAggressive_Interval, i.rotate)
+	}
 }
 
 func (i *stream) open() error {
