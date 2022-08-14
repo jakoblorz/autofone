@@ -84,16 +84,27 @@ func (c *client) syncHealth() {
 		case <-c.ctx.Done():
 			return
 		default:
-			err := c.Snapshots().Health()
+			ch := make(chan error)
+			go func(ch chan<- error) {
+				defer func() {
+					if err := recover(); err != nil {
+						ch <- fmt.Errorf("panic: %v", err)
+					}
+				}()
+				ch <- c.Snapshots().Health()
+			}(ch)
+			err := <-ch
 			if err != nil {
 				errCounter++
 				if errCounter > 10 {
 					log.Printf("error streaming health status, panicking: %s", err)
 					panic(err)
 				} else {
-					log.Printf("error streaming health status: %s", err)
+					log.Printf("error streaming health status: %s, waiting %ds", err, errCounter+1)
 				}
-				continue
+				<-time.After(time.Duration((errCounter + 1)) * time.Second)
+			} else {
+				errCounter = 0
 			}
 		}
 	}

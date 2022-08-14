@@ -3,6 +3,7 @@ package streamdb
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -53,10 +54,6 @@ func (h *handle) View(fn func(*bolt.Tx) error) error {
 	return h.DB.View(fn)
 }
 
-type FileWriter interface {
-	WriteFrom(context.Context, <-chan string)
-}
-
 type Snapshotter interface {
 	Write(io.Reader) error
 }
@@ -67,15 +64,7 @@ type I interface {
 	Close() error
 }
 
-func OpenFW(path string, fw FileWriter, debounceMode DebounceMode) (I, error) {
-	return open(path, fw, nil, debounceMode)
-}
-
 func Open(path string, wg Snapshotter, debounceMode DebounceMode) (I, error) {
-	return open(path, nil, wg, debounceMode)
-}
-
-func open(path string, fw FileWriter, wg Snapshotter, debounceMode DebounceMode) (I, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	w := &stream{
 		Path: path,
@@ -89,11 +78,6 @@ func open(path string, fw FileWriter, wg Snapshotter, debounceMode DebounceMode)
 	}
 	if err := w.open(); err != nil {
 		return nil, err
-	}
-
-	if fw != nil {
-		w.fileC = make(chan string, 1)
-		go fw.WriteFrom(ctx, w.fileC)
 	}
 
 	if wg != nil {
@@ -115,7 +99,6 @@ type stream struct {
 	debounceTimer *time.Timer
 	debounceMx    *sync.Mutex
 
-	fileC        chan string
 	writerGetter Snapshotter
 
 	Path string
@@ -177,11 +160,6 @@ func (i *stream) rotate() {
 			fn()
 		}()
 	}
-
-	if i.fileC != nil {
-		rotateWithPriviledges(i.rotateFileWriter)
-		return
-	}
 	rotateWithPriviledges(func() {
 		backup := &bytes.Buffer{}
 		err := i.handleDb.Update(func(tx *bolt.Tx) error {
@@ -205,7 +183,7 @@ func (i *stream) rotate() {
 				constants.PacketSessionHistory,
 			} {
 				err = tx.DeleteBucket([]byte{bucketName})
-				if err != nil {
+				if err != nil && !errors.Is(err, bolt.ErrBucketNotFound) {
 					return err
 				}
 			}
@@ -221,23 +199,6 @@ func (i *stream) rotate() {
 			fmt.Fprintf(os.Stderr, "error submitting snapshot: %s\n", err)
 		}
 	})
-}
-
-func (i *stream) rotateFileWriter() {
-	if err := i.close(); err != nil {
-		fmt.Fprintf(os.Stderr, "error closing database: %s\n", err)
-		return
-	}
-	p := fmt.Sprintf("%s-%d.db", i.Path, time.Now().Unix())
-	if err := os.Rename(fmt.Sprintf("%s.db", i.Path), p); err != nil {
-		fmt.Fprintf(os.Stderr, "error rotating file: %s\n", err)
-	}
-	if err := i.open(); err != nil {
-		fmt.Fprintf(os.Stderr, "error opening database: %s\n", err)
-		panic(err)
-	}
-
-	i.fileC <- p
 }
 
 func (i *stream) Get() Handle {
@@ -256,9 +217,6 @@ func (i *stream) Close() error {
 	i.rotate()
 	i.mx.Lock()
 
-	if i.fileC != nil {
-		close(i.fileC)
-	}
 	time.Sleep(1 * time.Second)
 	i.cancel()
 	return i.close()

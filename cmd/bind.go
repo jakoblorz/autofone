@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/packets/process"
@@ -24,8 +25,17 @@ type snapshotWriter struct {
 	privateapi.Client
 }
 
-func (s *snapshotWriter) Write(reader io.Reader) error {
-	return s.Snapshots().CreateAndWrite(reader)
+func (s *snapshotWriter) Write(reader io.Reader) (err error) {
+	var r *privateapi.SnapshotCreateResponse
+	r, err = s.Snapshots().CreateAndWrite(reader)
+	if err == nil {
+		file := strings.Split(r.File, "/")
+		if len(file) != 3 {
+			file = []string{"", "", ""}
+		}
+		log.Printf("successfully uploaded snapshot (%s/<redacted>/%s)", file[0], file[2])
+	}
+	return
 }
 
 var (
@@ -160,6 +170,7 @@ for the packet ids to select.
 				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
+				defer boltWriter.Close()
 
 				for {
 					select {

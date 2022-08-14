@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jakoblorz/autofone/pkg/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"golang.org/x/net/websocket"
@@ -38,6 +39,7 @@ func (s *SnapshotsClient) Health() error {
 		return err
 	}
 	websocket.Message.Send(ws, fmt.Sprintf("Bearer %s", token))
+	isFirstConnect := true
 	for {
 		select {
 		case <-s.ctx.Done():
@@ -56,7 +58,11 @@ func (s *SnapshotsClient) Health() error {
 			if actualMsg != expectMsg {
 				return fmt.Errorf("unexpected message: %s", actualMsg)
 			}
+		}
 
+		if isFirstConnect {
+			isFirstConnect = false
+			log.Printf("connected and authenticated to %s", wsBaseURL)
 		}
 	}
 }
@@ -105,8 +111,7 @@ func (s *SnapshotsClient) CreateAndUpload(file string) (err error) {
 	return
 }
 
-func (s *SnapshotsClient) CreateAndWrite(rdr io.Reader) (err error) {
-	var r *SnapshotCreateResponse
+func (s *SnapshotsClient) CreateAndWrite(rdr io.Reader) (r *SnapshotCreateResponse, err error) {
 	r, err = s.Create()
 	if err != nil {
 		return
@@ -131,7 +136,7 @@ func (s *SnapshotsClient) CreateAndWrite(rdr io.Reader) (err error) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to upload snapshot: %s", res.Status)
+		return nil, fmt.Errorf("failed to upload snapshot: %s", res.Status)
 	}
 	return
 }
