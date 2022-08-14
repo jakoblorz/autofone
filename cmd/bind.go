@@ -94,6 +94,7 @@ for the packet ids to select.
 				Context:  ctx,
 				Hostname: host,
 				C:        make(chan *process.M),
+				S:        make(chan *process.M),
 			}
 			go func() {
 				defer close(stream.C)
@@ -117,11 +118,6 @@ for the packet ids to select.
 						LogJSON: logJSON,
 						Verbose: verbose,
 					},
-					&writer.Bolt{
-						P:      &stream,
-						Client: api,
-						DB:     db,
-					},
 				}
 				for {
 					select {
@@ -143,6 +139,33 @@ for the packet ids to select.
 								w.Write(m)
 							}(w)
 						}
+					}
+				}
+			}()
+			go func() {
+				boltWriter := &writer.Bolt{
+					P:      &stream,
+					Client: api,
+					DB:     db,
+				}
+				boltWriter.Motion = writer.NewMotionDebouncer(boltWriter)
+				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
+				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
+				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
+
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case m := <-stream.S:
+						go func(w writer.Writer) {
+							defer func() {
+								if r := recover(); r != nil {
+									log.Printf("recovered from panic: %+v", r)
+								}
+							}()
+							w.Write(m)
+						}(boltWriter)
 					}
 				}
 			}()
