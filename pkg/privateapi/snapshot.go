@@ -2,6 +2,7 @@ package privateapi
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -90,6 +91,38 @@ func (s *SnapshotsClient) CreateAndUpload(file string) (err error) {
 	s.client.Lock()
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.client.token))
 	s.client.Unlock()
+
+	client := clientPool.Get().(*http.Client)
+	res, err := client.Do(req)
+	clientPool.Put(client)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to upload snapshot: %s", res.Status)
+	}
+	return
+}
+
+func (s *SnapshotsClient) CreateAndWrite(rdr io.Reader) (err error) {
+	var r *SnapshotCreateResponse
+	r, err = s.Create()
+	if err != nil {
+		return
+	}
+
+	var req *http.Request
+	req, err = http.NewRequest(http.MethodPut, r.SignedURL, rdr)
+	if err != nil {
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/octet-stream")
+	s.client.Lock()
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.client.token))
+	s.client.Unlock()
+
 	client := clientPool.Get().(*http.Client)
 	res, err := client.Do(req)
 	clientPool.Put(client)

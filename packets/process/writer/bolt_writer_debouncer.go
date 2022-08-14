@@ -40,7 +40,10 @@ func NewPacketDebouncer(ch writer, interval time.Duration) *packetDebouncer {
 	return pdc
 }
 
-func NewMotionDebouncer(ch writer) *motionDebouncer {
+func NewMotionDebouncer(ch writer, interval time.Duration) *motionDebouncer {
+	if interval == 0 {
+		interval = motionDebouncerInterval
+	}
 	mdc := &motionDebouncer{
 		mx: &sync.Mutex{},
 

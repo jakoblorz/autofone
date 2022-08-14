@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -15,10 +16,17 @@ import (
 	"github.com/jakoblorz/autofone/pkg/log"
 	"github.com/jakoblorz/autofone/pkg/privateapi"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
-	"github.com/jakoblorz/autofone/pkg/streamdb/httpwriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
+
+type snapshotWriter struct {
+	privateapi.Client
+}
+
+func (s *snapshotWriter) Write(reader io.Reader) error {
+	return s.Snapshots().CreateAndWrite(reader)
+}
 
 var (
 	url     string
@@ -54,7 +62,7 @@ for the packet ids to select.
 			api := privateapi.New(token, baseURL)
 			defer api.Close()
 
-			db, err := streamdb.Open("autofone", httpwriter.New(api), streamdb.DebounceModeDelay)
+			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeDelay)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
@@ -148,7 +156,7 @@ for the packet ids to select.
 					Client: api,
 					DB:     db,
 				}
-				boltWriter.Motion = writer.NewMotionDebouncer(boltWriter)
+				boltWriter.Motion = writer.NewMotionDebouncer(boltWriter, 0)
 				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
