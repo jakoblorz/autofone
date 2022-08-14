@@ -3,21 +3,40 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/packets/process/reader"
 	"github.com/jakoblorz/autofone/packets/process/writer"
 	"github.com/jakoblorz/autofone/pkg/log"
+	"github.com/jakoblorz/autofone/pkg/privateapi"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
-	"github.com/jakoblorz/autofone/pkg/streamdb/gswriter"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
 )
+
+type snapshotWriter struct {
+	privateapi.Client
+}
+
+func (s *snapshotWriter) Write(reader io.Reader) (err error) {
+	var r *privateapi.SnapshotCreateResponse
+	r, err = s.Snapshots().CreateAndWrite(reader)
+	if err == nil {
+		file := strings.Split(r.File, "/")
+		if len(file) != 3 {
+			file = []string{"", "", ""}
+		}
+		log.Printf("successfully uploaded snapshot (%s/<redacted>/%s)", file[0], file[2])
+	}
+	return
+}
 
 var (
 	url     string
@@ -27,6 +46,8 @@ var (
 	logJSON bool
 	logPack bool
 	logRaw  bool
+
+	token string
 
 	devMode bool
 
@@ -43,7 +64,15 @@ See https://github.com/anilmisirlioglu/f1-telemetry-go/blob/master/pkg/constants
 for the packet ids to select.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			db, err := streamdb.Open("autofone", gswriter.New(storageClient.Bucket(storageBucket), mac))
+
+			baseURL := "https://api.autofone.jakoblorz.de"
+			if devMode {
+				baseURL = "http://localhost:8080"
+			}
+			api := privateapi.New(token, baseURL)
+			defer api.Close()
+
+			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeDelay)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
@@ -80,10 +109,10 @@ for the packet ids to select.
 
 			log.Printf("awaiting packets from %s", conn.LocalAddr().String())
 			stream := process.P{
-				Context:   ctx,
-				Hostname:  host,
-				SessionID: sessionID,
-				C:         make(chan *process.M),
+				Context:  ctx,
+				Hostname: host,
+				C:        make(chan *process.M),
+				S:        make(chan *process.M),
 			}
 			go func() {
 				defer close(stream.C)
@@ -106,10 +135,6 @@ for the packet ids to select.
 						URL:     url,
 						LogJSON: logJSON,
 						Verbose: verbose,
-					},
-					&writer.Bolt{
-						P:  &stream,
-						DB: db,
 					},
 				}
 				for {
@@ -135,6 +160,34 @@ for the packet ids to select.
 					}
 				}
 			}()
+			go func() {
+				boltWriter := &writer.Bolt{
+					P:      &stream,
+					Client: api,
+					DB:     db,
+				}
+				boltWriter.Motion = writer.NewMotionDebouncer(boltWriter, 0)
+				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
+				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
+				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
+				defer boltWriter.Close()
+
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case m := <-stream.S:
+						go func(w writer.Writer) {
+							defer func() {
+								if r := recover(); r != nil {
+									log.Printf("recovered from panic: %+v", r)
+								}
+							}()
+							w.Write(m)
+						}(boltWriter)
+					}
+				}
+			}()
 
 			signal.Notify(sig, os.Interrupt)
 			<-sig
@@ -152,6 +205,9 @@ func init() {
 	bindCmd.Flags().IntVar(&udp, "udp", 20777, "UDP port to listen on; 20777 is the F1 2021/2022 default UDP port")
 	bindCmd.Flags().IntVar(&tcp, "tcp", -1, "TCP port to listen on for websocket connections; -1 means websocket is disabled")
 	bindCmd.Flags().StringVar(&url, "http", "https://localhost:8081/f1", "FQURL to post the packets to; if empty, no request is sent")
+
+	// auth
+	bindCmd.Flags().StringVar(&token, "token", "", "Token to authenticate against autofone.jakoblorz.de")
 
 	// logging flags
 	bindCmd.Flags().BoolVar(&logJSON, "json", false, "Log JSON sent to the HTTP Server")

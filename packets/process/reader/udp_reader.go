@@ -21,7 +21,6 @@ type UDP struct {
 
 func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 
-READ_UDP:
 	for {
 		select {
 		case <-ctx.Done():
@@ -42,17 +41,7 @@ READ_UDP:
 			continue
 		}
 
-		var c uint8
-		for _, f := range filter {
-			c = uint8(f) ^ header.PacketID
-			if c == 0 {
-				break
-			}
-		}
-		if c != 0 {
-			log.Verbosef("received %d bytes, representing packet %d -> dropping", n, header.PacketID)
-			continue READ_UDP
-		} else if ch.Verbose || ch.LogRaw {
+		if ch.Verbose || ch.LogRaw {
 			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
 			if ch.LogRaw {
 				message = fmt.Sprintf("%s: %+b", message, buf)
@@ -84,15 +73,30 @@ READ_UDP:
 			}
 		}
 
-		if ch.LogPack {
-			log.Printf("processing package: %+v", pack)
+		var c uint8
+		for _, f := range filter {
+			c = uint8(f) ^ header.PacketID
+			if c == 0 {
+				break
+			}
 		}
+		if c == 0 {
+			if ch.LogPack {
+				log.Printf("processing package: %+v", pack)
+			}
 
-		ch.C <- &process.M{
-			Header: *header,
-			Pack:   pack,
-			Buffer: buf,
+			ch.C <- &process.M{
+				Header: *header,
+				Pack:   pack,
+				Buffer: buf,
+			}
 		}
-
+		if ch.S != nil {
+			ch.S <- &process.M{
+				Header: *header,
+				Pack:   pack,
+				Buffer: buf,
+			}
+		}
 	}
 }

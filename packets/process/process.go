@@ -15,8 +15,10 @@ type M struct {
 type P struct {
 	context.Context
 
-	SessionID string
-	Hostname  string
+	Hostname string
+	DeviceID string
+	UserID   string
 
 	C chan *M
+	S chan *M
 }

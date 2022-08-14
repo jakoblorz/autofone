@@ -51,7 +51,7 @@ var (
 
 	motionData = packets.PacketMotionData21{
 		Header: packets.PacketHeader{
-			PacketFormat:            2020,
+			PacketFormat:            2021,
 			GameMajorVersion:        1,
 			GameMinorVersion:        18,
 			PacketVersion:           1,
