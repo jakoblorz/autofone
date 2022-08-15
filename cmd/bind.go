@@ -72,7 +72,7 @@ for the packet ids to select.
 			api := privateapi.New(token, baseURL)
 			defer api.Close()
 
-			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeDelay)
+			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeActive)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
@@ -170,6 +170,7 @@ for the packet ids to select.
 				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
+				boltWriter.SessionHistory = writer.NewSessionHistoryDebouncer(boltWriter, 0)
 				defer boltWriter.Close()
 
 				for {

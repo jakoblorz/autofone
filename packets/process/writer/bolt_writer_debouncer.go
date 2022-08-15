@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	motionDebouncerInterval = 250 * time.Millisecond
-	packetDebouncerInterval = 1 * time.Second
+	motionDebouncerInterval         = 250 * time.Millisecond
+	packetDebouncerInterval         = 1 * time.Second
+	sessionHistoryDebouncerInterval = 10 * time.Second
 )
 
 type writer interface {
@@ -259,4 +260,44 @@ func (a averageAndLastPlayerCarMotion22) AverageAndLastPlayerCarMotion() *packet
 	}
 
 	return &pmd
+}
+
+func NewSessionHistoryDebouncer(ch writer, interval time.Duration) *sessionHistoryDebouncer {
+	if interval == 0 {
+		interval = sessionHistoryDebouncerInterval
+	}
+	pdc := &sessionHistoryDebouncer{
+		ch:       ch,
+		interval: packetDebouncerInterval,
+	}
+	return pdc
+}
+
+type sessionHistoryDebouncer struct {
+	ch         writer
+	interval   time.Duration
+	debouncers map[uint8]*packetDebouncer
+}
+
+func (dbc *sessionHistoryDebouncer) Stop() {
+	for _, d := range dbc.debouncers {
+		d.timer.Stop()
+	}
+}
+
+func (dbc *sessionHistoryDebouncer) Write(m *process.M) {
+	if sh21, ok := m.Pack.(*packets.PacketSessionHistoryData21); ok {
+		if dbc.debouncers[sh21.CarIdx] == nil {
+			dbc.debouncers[sh21.CarIdx] = NewPacketDebouncer(dbc.ch, dbc.interval)
+		}
+		dbc.debouncers[sh21.CarIdx].Write(m)
+		return
+	}
+	if sh22, ok := m.Pack.(*packets.PacketSessionHistoryData22); ok {
+		if dbc.debouncers[sh22.CarIdx] == nil {
+			dbc.debouncers[sh22.CarIdx] = NewPacketDebouncer(dbc.ch, dbc.interval)
+		}
+		dbc.debouncers[sh22.CarIdx].Write(m)
+		return
+	}
 }

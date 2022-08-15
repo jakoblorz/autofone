@@ -25,7 +25,7 @@ const (
 
 const (
 	DebounceModeDelay_Interval      time.Duration = 1 * time.Minute
-	DebounceModeActive_Interval     time.Duration = 4 * time.Second
+	DebounceModeActive_Interval     time.Duration = 25 * time.Second
 	DebounceModeAggressive_Interval time.Duration = 250 * time.Millisecond
 )
 
