@@ -267,8 +267,9 @@ func NewSessionHistoryDebouncer(ch writer, interval time.Duration) *sessionHisto
 		interval = sessionHistoryDebouncerInterval
 	}
 	pdc := &sessionHistoryDebouncer{
-		ch:       ch,
-		interval: packetDebouncerInterval,
+		ch:         ch,
+		interval:   packetDebouncerInterval,
+		debouncers: make(map[uint8]*packetDebouncer),
 	}
 	return pdc
 }
@@ -281,7 +282,9 @@ type sessionHistoryDebouncer struct {
 
 func (dbc *sessionHistoryDebouncer) Stop() {
 	for _, d := range dbc.debouncers {
-		d.timer.Stop()
+		if d.timer != nil {
+			d.timer.Stop()
+		}
 	}
 }
 
