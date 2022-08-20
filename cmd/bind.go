@@ -72,7 +72,7 @@ for the packet ids to select.
 			api := privateapi.New(token, baseURL)
 			defer api.Close()
 
-			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeActive)
+			db, err := streamdb.Open("autofone", &snapshotWriter{api}, streamdb.DebounceModeDelay)
 			if err != nil {
 				log.Printf("%+v", err)
 				return
