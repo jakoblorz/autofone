@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/jakoblorz/autofone/constants"
+	"github.com/jakoblorz/autofone/pkg/log"
 
 	"github.com/boltdb/bolt"
+	"github.com/inhies/go-bytesize"
 )
 
 type DebounceMode string
@@ -170,6 +172,7 @@ func (i *stream) rotate() {
 	rotateWithPriviledges(func() {
 		backup := &bytes.Buffer{}
 		err := i.handleDb.Update(func(tx *bolt.Tx) error {
+			log.Printf("snapshotting %s of data", bytesize.New(float64(tx.Size())))
 			_, err := tx.WriteTo(backup)
 			if err != nil {
 				return err
