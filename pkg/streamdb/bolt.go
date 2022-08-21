@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/jakoblorz/autofone/constants"
+	"github.com/jakoblorz/autofone/pkg/log"
 
 	"github.com/boltdb/bolt"
+	"github.com/inhies/go-bytesize"
 )
 
 type DebounceMode string
@@ -24,7 +26,7 @@ const (
 )
 
 const (
-	DebounceModeDelay_Interval      time.Duration = 1 * time.Minute
+	DebounceModeDelay_Interval      time.Duration = 25 * time.Second
 	DebounceModeActive_Interval     time.Duration = 25 * time.Second
 	DebounceModeAggressive_Interval time.Duration = 250 * time.Millisecond
 )
@@ -108,19 +110,26 @@ func (i *stream) notify() {
 	i.debounceMx.Lock()
 	defer i.debounceMx.Unlock()
 
-	if i.debounceMode == DebounceModeDelay && i.debounceTimer == nil {
-		i.debounceTimer = time.AfterFunc(DebounceModeDelay_Interval, i.rotate)
+	// DebounceModeDelay does not reset the timer, so we don't need to do anything.
+	// The timer MUST be reset stopped, then set to nil
+	if i.debounceMode == DebounceModeDelay {
+		if i.debounceTimer == nil {
+			i.debounceTimer = time.AfterFunc(DebounceModeDelay_Interval, i.rotate)
+		}
 		return
 	}
 
 	if i.debounceTimer != nil {
 		i.debounceTimer.Stop()
+		i.debounceTimer = nil
 	}
 	if i.debounceMode == DebounceModeActive {
 		i.debounceTimer = time.AfterFunc(DebounceModeActive_Interval, i.rotate)
+		return
 	}
 	if i.debounceMode == DebounceModeAggressive {
 		i.debounceTimer = time.AfterFunc(DebounceModeAggressive_Interval, i.rotate)
+		return
 	}
 }
 
@@ -163,6 +172,7 @@ func (i *stream) rotate() {
 	rotateWithPriviledges(func() {
 		backup := &bytes.Buffer{}
 		err := i.handleDb.Update(func(tx *bolt.Tx) error {
+			log.Printf("snapshotting %s of data", bytesize.New(float64(tx.Size())))
 			_, err := tx.WriteTo(backup)
 			if err != nil {
 				return err
