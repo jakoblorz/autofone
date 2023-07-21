@@ -61,6 +61,12 @@ type PacketCarDamageData22 struct {
 	CarDamageData [22]CarDamageData22
 }
 
+// This packet details car damage parameters for all the cars in the race.
+
+// Frequency: 10 per second
+// Size: 953 bytes
+// Version: 1
+
 type CarDamageData23 struct {
 	TyresWear            [4]float32 // Tyre wear (percentage)
 	TyresDamage          [4]uint8   // Tyre damage (percentage)

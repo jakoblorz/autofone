@@ -133,9 +133,9 @@ type PacketSessionData22 struct {
 }
 
 // The session packet includes details about the current session in progress.
-
+//
 // Frequency: 2 per second
-// Size: 632 bytes
+// Size: 644 bytes
 // Version: 1
 
 type MarshalZone23 struct {

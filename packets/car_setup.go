@@ -74,11 +74,10 @@ type PacketCarSetupData22 struct {
 	CarSetups [22]CarSetupData22
 }
 
-// This packet details the car setups for each vehicle in the session.
-// Note that in multiplayer games, other player cars will appear as blank, you will only be able to see your car setup and AI cars.
+// This packet details the car setups for each vehicle in the session. Note that in multiplayer games, other player cars will appear as blank, you will only be able to see your own car setup, regardless of the “Your Telemetry” setting. Spectators will also not be able to see any car setups.
 
 // Frequency: 2 per second
-// Size: 1102 bytes
+// Size: 1107 bytes
 // Version: 1
 
 type CarSetupData23 struct {

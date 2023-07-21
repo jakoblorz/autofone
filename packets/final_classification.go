@@ -53,6 +53,12 @@ type PacketFinalClassificationData22 struct {
 	ClassificationData [22]FinalClassificationData22
 }
 
+// This packet details the final classification at the end of the race, and the data will match with the post race results screen. This is especially useful for multiplayer games where it is not always possible to send lap times on the final frame because of network delay.
+
+// Frequency: Once at the end of a race
+// Size: 1020 bytes
+// Version: 1
+
 type FinalClassificationData23 struct {
 	Position          uint8    // Finishing position
 	NumLaps           uint8    // Number of laps completed

@@ -63,11 +63,10 @@ func (p *LobbyInfoData22) NameToString() string {
 	return string(p.Name[:])
 }
 
-// This packet details the players currently in a multiplayer lobby.
-// It details each player’s selected car, any AI involved in the game and also the ready status of each of the participants.
+// This packet details the players currently in a multiplayer lobby. It details each player’s selected car, any AI involved in the game and also the ready status of each of the participants.
 
 // Frequency: Two every second when in the lobby
-// Size: 1169 bytes
+// Size: 1218 bytes
 // Version: 1
 
 type LobbyInfoData23 struct {

@@ -74,10 +74,10 @@ type PacketCarStatusData22 struct {
 	CarStatusData [22]CarStatusData22
 }
 
-// This packet details car statuses for all the cars in the race. It includes values such as the damage readings on the car.
+// This packet details car statuses for all the cars in the race.
 
 // Frequency: Rate as specified in menus
-// Size: 1058
+// Size: 1239 bytes
 // Version: 1
 
 type CarStatusData23 struct {

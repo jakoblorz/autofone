@@ -130,6 +130,14 @@ func ByPacketID(packetId uint8, packetFormat uint16) interface{} {
 		if packetFormat == constants.PacketFormat_2021 {
 			return new(PacketEventHeader21)
 		}
+	case constants.PacketTyreSets:
+		if packetFormat == constants.PacketFormat_2023 {
+			return new(PacketTyreSetsData23)
+		}
+	case constants.PacketMotionEx:
+		if packetFormat == constants.PacketFormat_2023 {
+			return new(PacketMotionExData23)
+		}
 	}
 
 	return nil

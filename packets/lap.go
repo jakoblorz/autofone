@@ -81,7 +81,7 @@ type PacketLapData22 struct {
 // The lap data packet gives details of all the cars in the session.
 
 // Frequency: Rate as specified in menus
-// Size: 1190 bytes
+// Size: 1131 bytes
 // Version: 1
 
 type LapData23 struct {

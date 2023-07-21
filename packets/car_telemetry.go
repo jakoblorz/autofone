@@ -68,11 +68,10 @@ type PacketCarTelemetryData22 struct {
 	SuggestedGear                int8  // Suggested gear for the player (1-8), 0 if no gear suggested
 }
 
-// This packet details telemetry for all the cars in the race.
-// It details various values that would be recorded on the car such as speed, throttle application, DRS etc.
+// This packet details telemetry for all the cars in the race. It details various values that would be recorded on the car such as speed, throttle application, DRS etc. Note that the rev light configurations are presented separately as well and will mimic real life driver preferences.
 
 // Frequency: Rate as specified in menus
-// Size: 1357 bytes
+// Size: 1352 bytes
 // Version: 1
 
 type CarTelemetryData23 struct {

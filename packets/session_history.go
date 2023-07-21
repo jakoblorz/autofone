@@ -75,7 +75,7 @@ type PacketSessionHistoryData22 struct {
 // Note that at the end of the race, after the final classification packet has been sent, a final bulk update of all the session histories for the vehicles in that session will be sent.
 
 // Frequency: 20 per second but cycling through cars
-// Size: 1155 bytes
+// Size: 1460 bytes
 // Version: 1
 
 type LapHistoryData23 struct {

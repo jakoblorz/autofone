@@ -3,7 +3,7 @@ package packets
 // This packet gives details of events that happen during the course of a session.
 
 // Frequency: When the event occurs
-// Size: 35 bytes
+// Size: 35 bytes (F1 2023: 45 bytes)
 // Version: 1
 
 type FastestLap21 struct {
