@@ -23,7 +23,7 @@ type WeatherForecastSample21 struct {
 }
 
 type PacketSessionData21 struct {
-	Header                    PacketHeader2122
+	Header                    PacketHeader21
 	Weather                   uint8                       // Weather - 0 = clear, 1 = light cloud, 2 = overcast, 3 = light rain, 4 = heavy rain, 5 = storm
 	TrackTemperature          int8                        // Track temp. in degrees celsius
 	AirTemperature            int8                        // Air temp. in degrees celsius
@@ -87,7 +87,7 @@ type WeatherForecastSample22 struct {
 }
 
 type PacketSessionData22 struct {
-	Header                    PacketHeader2122
+	Header                    PacketHeader22
 	Weather                   uint8                       // Weather - 0 = clear, 1 = light cloud, 2 = overcast, 3 = light rain, 4 = heavy rain, 5 = storm
 	TrackTemperature          int8                        // Track temp. in degrees celsius
 	AirTemperature            int8                        // Air temp. in degrees celsius

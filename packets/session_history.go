@@ -23,7 +23,7 @@ type TyreStintHistoryData21 struct {
 }
 
 type PacketSessionHistoryData21 struct {
-	Header                PacketHeader2122      // Header
+	Header                PacketHeader21        // Header
 	CarIdx                uint8                 // Index of the car this lap data relates to
 	NumLaps               uint8                 // Num laps in the data (including current partial lap)
 	NumTyreStints         uint8                 // Number of tyre stints in the data
@@ -58,7 +58,7 @@ type TyreStintHistoryData22 struct {
 }
 
 type PacketSessionHistoryData22 struct {
-	Header                PacketHeader2122      // Header
+	Header                PacketHeader22        // Header
 	CarIdx                uint8                 // Index of the car this lap data relates to
 	NumLaps               uint8                 // Num laps in the data (including current partial lap)
 	NumTyreStints         uint8                 // Number of tyre stints in the data

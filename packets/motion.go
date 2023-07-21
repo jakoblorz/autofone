@@ -29,7 +29,7 @@ type CarMotionData21 struct {
 }
 
 type PacketMotionData21 struct {
-	Header        PacketHeader2122    // Header
+	Header        PacketHeader21      // Header
 	CarMotionData [22]CarMotionData21 // Data for all cars on track
 
 	// Extra player car ONLY data
@@ -79,7 +79,7 @@ type CarMotionData22 struct {
 }
 
 type PacketMotionData22 struct {
-	Header        PacketHeader2122    // Header
+	Header        PacketHeader22      // Header
 	CarMotionData [22]CarMotionData22 // Data for all cars on track
 
 	// Extra player car ONLY data

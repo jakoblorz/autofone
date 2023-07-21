@@ -37,15 +37,24 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 
 		var header packets.HeaderProvider
 
-		header2122 := new(packets.PacketHeader2122)
-		if err = packets.Read_LE(buf, header2122); err != nil {
+		header21 := new(packets.PacketHeader21)
+		if err = packets.Read_LE(buf, header21); err != nil {
 			log.Printf("%+v", err)
 			continue
 		}
-		header = header2122
+		header = header21
 
-		header23 := new(packets.PacketHeader23)
-		if header2122.PacketFormat == constants.PacketFormat_2023 {
+		if header21.PacketFormat == constants.PacketFormat_2022 {
+			header22 := new(packets.PacketHeader22)
+			if err = packets.Read_LE(buf, header22); err != nil {
+				log.Printf("%+v", err)
+				continue
+			}
+			header = header22
+		}
+
+		if header21.PacketFormat == constants.PacketFormat_2023 {
+			header23 := new(packets.PacketHeader23)
 			if err = packets.Read_LE(buf, header23); err != nil {
 				log.Printf("%+v", err)
 				continue
@@ -73,7 +82,7 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 		}
 
 		if header.GetPacketID() == constants.PacketEvent {
-			h := pack.(*packets.PacketEventHeader)
+			h := pack.(*packets.PacketEventHeader21)
 			pack = packets.ByEventHeader(h, header.GetPacketFormat())
 			if pack == nil {
 				log.Printf("invalid event packet: %d", header.GetPacketID())

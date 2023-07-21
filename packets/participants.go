@@ -29,7 +29,7 @@ type ParticipantData21 struct {
 }
 
 type PacketParticipantsData21 struct {
-	Header        PacketHeader2122
+	Header        PacketHeader21
 	NumActiveCars uint8 // Number of active cars in the data – should match number of cars on HUD
 	Participants  [22]ParticipantData21
 }
@@ -58,7 +58,7 @@ type ParticipantData22 struct {
 }
 
 type PacketParticipantsData22 struct {
-	Header        PacketHeader2122
+	Header        PacketHeader22
 	NumActiveCars uint8 // Number of active cars in the data – should match number of cars on HUD
 	Participants  [22]ParticipantData22
 }

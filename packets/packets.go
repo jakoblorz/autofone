@@ -88,13 +88,13 @@ func ByPacketID(packetId uint8, packetFormat uint16) interface{} {
 			return new(PacketSessionHistoryData21)
 		}
 	case constants.PacketEvent:
-		return new(PacketEventHeader)
+		return new(PacketEventHeader21)
 	}
 
 	return nil
 }
 
-func ByEventHeader(h *PacketEventHeader, packetFormat uint16) interface{} {
+func ByEventHeader(h *PacketEventHeader21, packetFormat uint16) interface{} {
 	switch h.EventCodeString() {
 	case event.FastestLap:
 		if packetFormat == constants.PacketFormat_2022 {

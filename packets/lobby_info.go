@@ -26,7 +26,7 @@ type LobbyInfoData21 struct {
 }
 
 type PacketLobbyInfoData21 struct {
-	Header PacketHeader2122 // Header
+	Header PacketHeader21 // Header
 	// Packet specific data
 	NumPlayers   uint8 // Number of players in the lobby data
 	LobbyPlayers [22]LobbyInfoData21
@@ -53,7 +53,7 @@ type LobbyInfoData22 struct {
 }
 
 type PacketLobbyInfoData22 struct {
-	Header PacketHeader2122 // Header
+	Header PacketHeader22 // Header
 	// Packet specific data
 	NumPlayers   uint8 // Number of players in the lobby data
 	LobbyPlayers [22]LobbyInfoData22

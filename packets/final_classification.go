@@ -24,8 +24,8 @@ type FinalClassificationData21 struct {
 	TyreStintsVisual [8]uint8 // Visual tyres used by this driver
 }
 type PacketFinalClassificationData21 struct {
-	Header             PacketHeader2122 // Header
-	NumCars            uint8            // Number of cars in the final classification
+	Header             PacketHeader21 // Header
+	NumCars            uint8          // Number of cars in the final classification
 	ClassificationData [22]FinalClassificationData21
 }
 
@@ -47,7 +47,7 @@ type FinalClassificationData22 struct {
 }
 
 type PacketFinalClassificationData22 struct {
-	Header             PacketHeader2122 // Header
-	NumCars            uint8            // Number of cars in the final classification
+	Header             PacketHeader22 // Header
+	NumCars            uint8          // Number of cars in the final classification
 	ClassificationData [22]FinalClassificationData22
 }
