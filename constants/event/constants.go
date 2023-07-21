@@ -19,4 +19,5 @@ const (
 	StopGoServed       string = "SGSV" // Stop go penalty served
 	Flashback          string = "FLBK" // Flashback activated
 	ButtonStatus       string = "BUTN" // Button status changed
+	Overtake           string = "OVTK" // Overtake occured
 )
