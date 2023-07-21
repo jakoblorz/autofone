@@ -7,7 +7,7 @@ import (
 )
 
 type M struct {
-	Header packets.PacketHeader
+	Header packets.HeaderProvider
 	Pack   interface{}
 	Buffer []byte
 }

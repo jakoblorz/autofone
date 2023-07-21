@@ -58,7 +58,7 @@ func (ch *HTTP) Write(m *process.M) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", strings.ReplaceAll(ch.URL, "{{packetID}}", fmt.Sprintf("%d", m.Header.PacketID)), bytes.NewBuffer(data))
+	req, err := http.NewRequest("POST", strings.ReplaceAll(ch.URL, "{{packetID}}", fmt.Sprintf("%d", m.Header.GetPacketID())), bytes.NewBuffer(data))
 	if err != nil {
 		panic(err)
 	}

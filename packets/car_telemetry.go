@@ -27,7 +27,7 @@ type CarTelemetryData21 struct {
 }
 
 type PacketCarTelemetryData21 struct {
-	Header                       PacketHeader
+	Header                       PacketHeader2122
 	CarTelemetryData             [22]CarTelemetryData21
 	MFDPanelIndex                uint8 // Index of MFD panel open, see for more details: docs/CAR.md#mfd-index-panel
 	MFDPanelIndexSecondaryPlayer uint8 // See above
@@ -61,7 +61,7 @@ type CarTelemetryData22 struct {
 }
 
 type PacketCarTelemetryData22 struct {
-	Header                       PacketHeader
+	Header                       PacketHeader2122
 	CarTelemetryData             [22]CarTelemetryData22
 	MFDPanelIndex                uint8 // Index of MFD panel open, see for more details: docs/CAR.md#mfd-index-panel
 	MFDPanelIndexSecondaryPlayer uint8 // See above

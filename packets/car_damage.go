@@ -28,7 +28,7 @@ type CarDamageData21 struct {
 }
 
 type PacketCarDamageData21 struct {
-	Header        PacketHeader // Header
+	Header        PacketHeader2122 // Header
 	CarDamageData [22]CarDamageData21
 }
 
@@ -57,6 +57,6 @@ type CarDamageData22 struct {
 }
 
 type PacketCarDamageData22 struct {
-	Header        PacketHeader // Header
+	Header        PacketHeader2122 // Header
 	CarDamageData [22]CarDamageData22
 }

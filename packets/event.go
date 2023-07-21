@@ -12,7 +12,7 @@ type FastestLap21 struct {
 }
 
 type PacketEventFastestLap21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8     // Event string code, see below
 	EventDetails    FastestLap21 // Event details - should be interpreted differently
 }
@@ -23,7 +23,7 @@ type FastestLap22 struct {
 }
 
 type PacketEventFastestLap22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8     // Event string code, see below
 	EventDetails    FastestLap22 // Event details - should be interpreted differently
 }
@@ -39,7 +39,7 @@ type Penalty21 struct {
 }
 
 type PacketEventPenalty21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8  // Event string code, see below
 	EventDetails    Penalty21 // Event details - should be interpreted differently
 }
@@ -55,7 +55,7 @@ type Penalty22 struct {
 }
 
 type PacketEventPenalty22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8  // Event string code, see below
 	EventDetails    Penalty22 // Event details - should be interpreted differently
 }
@@ -68,7 +68,7 @@ type SpeedTrap21 struct {
 }
 
 type PacketEventSpeedTrap21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8    // Event string code, see below
 	EventDetails    SpeedTrap21 // Event details - should be interpreted differently
 }
@@ -83,7 +83,7 @@ type SpeedTrap22 struct {
 }
 
 type PacketEventSpeedTrap22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8    // Event string code, see below
 	EventDetails    SpeedTrap22 // Event details - should be interpreted differently
 }
@@ -93,7 +93,7 @@ type StartLights21 struct {
 }
 
 type PacketEventStartLights21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8      // Event string code, see below
 	EventDetails    StartLights21 // Event details - should be interpreted differently
 }
@@ -103,7 +103,7 @@ type StartLights22 struct {
 }
 
 type PacketEventStartLights22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8      // Event string code, see below
 	EventDetails    StartLights22 // Event details - should be interpreted differently
 }
@@ -114,7 +114,7 @@ type Flashback21 struct {
 }
 
 type PacketEventFlashback21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8    // Event string code, see below
 	EventDetails    Flashback21 // Event details - should be interpreted differently
 }
@@ -124,7 +124,7 @@ type Flashback22 struct {
 }
 
 type PacketEventFlashback22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8    // Event string code, see below
 	EventDetails    Flashback22 // Event details - should be interpreted differently
 }
@@ -134,7 +134,7 @@ type Buttons21 struct {
 }
 
 type PacketEventButtons21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8  // Event string code, see below
 	EventDetails    Buttons21 // Event details - should be interpreted differently
 }
@@ -144,7 +144,7 @@ type Buttons22 struct {
 }
 
 type PacketEventButtons22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8  // Event string code, see below
 	EventDetails    Buttons22 // Event details - should be interpreted differently
 }
@@ -154,7 +154,7 @@ type GenericVehicleEvent21 struct {
 }
 
 type PacketEventGenericVehicleEvent21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8              // Event string code, see below
 	EventDetails    GenericVehicleEvent21 // Event details - should be interpreted differently
 }
@@ -163,23 +163,23 @@ type GenericVehicleEvent22 struct {
 }
 
 type PacketEventGenericVehicleEvent22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8              // Event string code, see below
 	EventDetails    GenericVehicleEvent22 // Event details - should be interpreted differently
 }
 
 type PacketEventGenericSessionEvent21 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8 // Event string code, see below
 }
 
 type PacketEventGenericSessionEvent22 struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8 // Event string code, see below
 }
 
 type PacketEventHeader struct {
-	Header          PacketHeader
+	Header          PacketHeader2122
 	EventStringCode [4]uint8
 }
 

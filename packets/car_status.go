@@ -33,7 +33,7 @@ type CarStatusData21 struct {
 }
 
 type PacketCarStatusData21 struct {
-	Header        PacketHeader
+	Header        PacketHeader2122
 	CarStatusData [22]CarStatusData21
 }
 
@@ -70,6 +70,6 @@ type CarStatusData22 struct {
 }
 
 type PacketCarStatusData22 struct {
-	Header        PacketHeader
+	Header        PacketHeader2122
 	CarStatusData [22]CarStatusData22
 }
