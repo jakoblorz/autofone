@@ -82,7 +82,16 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 		}
 
 		if header.GetPacketID() == constants.PacketEvent {
-			h := pack.(*packets.PacketEventHeader21) // TODO: this is not true anymore, it might be 22 or 23
+			var h packets.PacketEvent
+			switch header.GetPacketFormat() {
+			case constants.PacketFormat_2023:
+				h = pack.(*packets.PacketEventHeader23)
+			case constants.PacketFormat_2022:
+				h = pack.(*packets.PacketEventHeader22)
+			case constants.PacketFormat_2021:
+				h = pack.(*packets.PacketEventHeader21)
+			}
+			
 			pack = packets.ByEventHeader(h, header.GetPacketFormat())
 			if pack == nil {
 				log.Printf("invalid event packet: %d", header.GetPacketID())

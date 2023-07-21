@@ -143,7 +143,7 @@ func ByPacketID(packetId uint8, packetFormat uint16) interface{} {
 	return nil
 }
 
-func ByEventHeader(h *PacketEventHeader21, packetFormat uint16) interface{} {
+func ByEventHeader(h PacketEvent, packetFormat uint16) interface{} {
 	switch h.EventCodeString() {
 	case event.FastestLap:
 		if packetFormat == constants.PacketFormat_2023 {

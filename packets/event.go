@@ -1,5 +1,9 @@
 package packets
 
+type PacketEvent interface {
+	EventCodeString() string
+}
+
 // This packet gives details of events that happen during the course of a session.
 
 // Frequency: When the event occurs
