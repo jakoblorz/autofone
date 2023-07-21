@@ -82,7 +82,7 @@ type motionDebouncer struct {
 	mx    sync.Locker
 	timer *time.Timer
 
-	h packets.HeaderProvider
+	h packets.PacketHeader
 
 	packages_21 []*packets.PacketMotionData21
 	packages_22 []*packets.PacketMotionData22

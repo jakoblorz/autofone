@@ -35,7 +35,7 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 			return
 		}
 
-		var header packets.HeaderProvider
+		var header packets.PacketHeader
 
 		header21 := new(packets.PacketHeader21)
 		if err = packets.Read_LE(buf, header21); err != nil {

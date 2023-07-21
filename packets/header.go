@@ -1,6 +1,6 @@
 package packets
 
-type HeaderProvider interface {
+type PacketHeader interface {
 	GetPacketID() uint8
 	GetPacketFormat() uint16
 }

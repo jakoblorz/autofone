@@ -485,7 +485,7 @@ var (
 	}
 
 	PacketMotionData22 = packets.PacketMotionData22{
-		Header: packets.PacketHeader21{
+		Header: packets.PacketHeader22{
 			PacketFormat:            constants.PacketFormat_2021,
 			GameMajorVersion:        1,
 			GameMinorVersion:        5,
