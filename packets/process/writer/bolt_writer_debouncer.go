@@ -82,7 +82,7 @@ type motionDebouncer struct {
 	mx    sync.Locker
 	timer *time.Timer
 
-	h *packets.PacketHeader
+	h packets.PacketHeader
 
 	packages_21 []*packets.PacketMotionData21
 	packages_22 []*packets.PacketMotionData22
@@ -92,12 +92,12 @@ func (dbc *motionDebouncer) Write(m *process.M) {
 	dbc.mx.Lock()
 	defer dbc.mx.Unlock()
 
-	dbc.h = &m.Header
+	dbc.h = m.Header
 
-	if m.Header.PacketFormat == constants.PacketFormat_2021 {
+	if m.Header.GetPacketFormat() == constants.PacketFormat_2021 {
 		dbc.packages_21 = append(dbc.packages_21, m.Pack.(*packets.PacketMotionData21))
 	}
-	if m.Header.PacketFormat == constants.PacketFormat_2022 {
+	if m.Header.GetPacketFormat() == constants.PacketFormat_2022 {
 		dbc.packages_22 = append(dbc.packages_22, m.Pack.(*packets.PacketMotionData22))
 	}
 }
@@ -115,7 +115,7 @@ func (dbc *motionDebouncer) WriteTo(ch writer) {
 	}
 
 	var pack interface{}
-	if dbc.h.PacketFormat == constants.PacketFormat_2021 {
+	if dbc.h.GetPacketFormat() == constants.PacketFormat_2021 {
 		if len(dbc.packages_21) == 0 {
 			return
 		}
@@ -125,7 +125,7 @@ func (dbc *motionDebouncer) WriteTo(ch writer) {
 			pack = averageAndLastPlayerCarMotion21(dbc.packages_21).AverageAndLastPlayerCarMotion()
 		}
 	}
-	if dbc.h.PacketFormat == constants.PacketFormat_2022 {
+	if dbc.h.GetPacketFormat() == constants.PacketFormat_2022 {
 		if len(dbc.packages_22) == 0 {
 			return
 		}
@@ -137,7 +137,7 @@ func (dbc *motionDebouncer) WriteTo(ch writer) {
 	}
 
 	m := &process.M{
-		Header: *dbc.h,
+		Header: dbc.h,
 		Pack:   pack,
 	}
 

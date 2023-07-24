@@ -29,7 +29,7 @@ type Packet struct {
 	Data []byte `db:"data"`
 }
 
-func (p Packet) WithPacketHeader(ph *packets.PacketHeader) *Packet {
+func (p Packet) WithPacketHeader(ph *packets.PacketHeader21) *Packet {
 	p.ID = fmt.Sprintf("%s-%d", primitive.NewObjectID().Hex(), time.Now().Unix())
 
 	sessionUID := make([]byte, 8)

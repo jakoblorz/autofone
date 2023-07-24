@@ -35,47 +35,77 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 			return
 		}
 
-		header := new(packets.PacketHeader)
-		if err = packets.Read_LE(buf, header); err != nil {
+		var header packets.PacketHeader
+
+		header21 := new(packets.PacketHeader21)
+		if err = packets.Read_LE(buf, header21); err != nil {
 			log.Printf("%+v", err)
 			continue
 		}
+		header = header21
+
+		if header21.PacketFormat == constants.PacketFormat_2022 {
+			header22 := new(packets.PacketHeader22)
+			if err = packets.Read_LE(buf, header22); err != nil {
+				log.Printf("%+v", err)
+				continue
+			}
+			header = header22
+		}
+
+		if header21.PacketFormat == constants.PacketFormat_2023 {
+			header23 := new(packets.PacketHeader23)
+			if err = packets.Read_LE(buf, header23); err != nil {
+				log.Printf("%+v", err)
+				continue
+			}
+			header = header23
+		}
 
 		if ch.Verbose || ch.LogRaw {
-			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.PacketID)
+			message := fmt.Sprintf("received %d bytes, representing packet %d -> proceed", n, header.GetPacketID())
 			if ch.LogRaw {
 				message = fmt.Sprintf("%s: %+b", message, buf)
 			}
 			log.Print(message)
 		}
 
-		pack := packets.ByPacketID(header.PacketID, header.PacketFormat)
+		pack := packets.ByPacketID(header.GetPacketID(), header.GetPacketFormat())
 		if pack == nil {
-			log.Printf("invalid packet: %d", header.PacketID)
+			log.Printf("invalid packet: %d", header.GetPacketID())
 			continue
 		}
 
 		if err = packets.Read_LE(buf, pack); err != nil {
-			log.Printf("failed to read packet %d: %+v", header.PacketID, err)
+			log.Printf("failed to read packet %d: %+v", header.GetPacketID(), err)
 			continue
 		}
 
-		if header.PacketID == constants.PacketEvent {
-			h := pack.(*packets.PacketEventHeader)
-			pack = packets.ByEventHeader(h, header.PacketFormat)
+		if header.GetPacketID() == constants.PacketEvent {
+			var h packets.PacketEvent
+			switch header.GetPacketFormat() {
+			case constants.PacketFormat_2023:
+				h = pack.(*packets.PacketEventHeader23)
+			case constants.PacketFormat_2022:
+				h = pack.(*packets.PacketEventHeader22)
+			case constants.PacketFormat_2021:
+				h = pack.(*packets.PacketEventHeader21)
+			}
+			
+			pack = packets.ByEventHeader(h, header.GetPacketFormat())
 			if pack == nil {
-				log.Printf("invalid event packet: %d", header.PacketID)
+				log.Printf("invalid event packet: %d", header.GetPacketID())
 				continue
 			}
 			if err = packets.Read_LE(buf, pack); err != nil {
-				log.Printf("failed to read event packet %d: %+v", header.PacketID, err)
+				log.Printf("failed to read event packet %d: %+v", header.GetPacketID(), err)
 				continue
 			}
 		}
 
 		var c uint8
 		for _, f := range filter {
-			c = uint8(f) ^ header.PacketID
+			c = uint8(f) ^ header.GetPacketID()
 			if c == 0 {
 				break
 			}
@@ -86,14 +116,14 @@ func (ch *UDP) Read(ctx context.Context, conn *net.UDPConn, filter []uint) {
 			}
 
 			ch.C <- &process.M{
-				Header: *header,
+				Header: header,
 				Pack:   pack,
 				Buffer: buf,
 			}
 		}
 		if ch.S != nil {
 			ch.S <- &process.M{
-				Header: *header,
+				Header: header,
 				Pack:   pack,
 				Buffer: buf,
 			}

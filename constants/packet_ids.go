@@ -14,4 +14,6 @@ const (
 	PacketLobbyInfo           uint8 = 9  // Information about players in a multiplayer lobby
 	PacketCarDamage           uint8 = 10 // Damage status for all cars
 	PacketSessionHistory      uint8 = 11 // Lap and tyre data for session
+	PacketTyreSets            uint8 = 12 // Extended tyre set data
+	PacketMotionEx            uint8 = 13 // Extended motion data for player car
 )

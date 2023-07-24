@@ -51,7 +51,7 @@ func (ch *Bolt) write(m *process.M) {
 	id := fmt.Sprintf("%s-%011d", primitive.NewObjectID().Hex(), time.Now().Unix())
 
 	h.Batch(func(tx *bolt.Tx) (err error) {
-		bkt, err := tx.CreateBucketIfNotExists([]byte{m.Header.PacketID})
+		bkt, err := tx.CreateBucketIfNotExists([]byte{m.Header.GetPacketID()})
 		if err != nil {
 			return
 		}
@@ -62,23 +62,23 @@ func (ch *Bolt) write(m *process.M) {
 }
 
 func (ch *Bolt) Write(m *process.M) {
-	if ch.Motion != nil && m.Header.PacketID == constants.PacketMotion {
+	if ch.Motion != nil && m.Header.GetPacketID() == constants.PacketMotion {
 		ch.Motion.Write(m)
 		return
 	}
-	if ch.Lap != nil && m.Header.PacketID == constants.PacketLap {
+	if ch.Lap != nil && m.Header.GetPacketID() == constants.PacketLap {
 		ch.Lap.Write(m)
 		return
 	}
-	if ch.CarTelemetry != nil && m.Header.PacketID == constants.PacketCarTelemetry {
+	if ch.CarTelemetry != nil && m.Header.GetPacketID() == constants.PacketCarTelemetry {
 		ch.CarTelemetry.Write(m)
 		return
 	}
-	if ch.CarStatus != nil && m.Header.PacketID == constants.PacketCarStatus {
+	if ch.CarStatus != nil && m.Header.GetPacketID() == constants.PacketCarStatus {
 		ch.CarStatus.Write(m)
 		return
 	}
-	if ch.SessionHistory != nil && m.Header.PacketID == constants.PacketSessionHistory {
+	if ch.SessionHistory != nil && m.Header.GetPacketID() == constants.PacketSessionHistory {
 		ch.SessionHistory.Write(m)
 		return
 	}
