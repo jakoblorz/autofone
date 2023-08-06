@@ -151,7 +151,7 @@ func (i *stream) close() error {
 }
 
 func (i *stream) rotate() {
-	rotateWithPriviledges := func(fn func()) {
+	rotateWithPrivileges := func(fn func()) {
 		i.mx.Lock()
 		go func() {
 			defer i.mx.Unlock()
@@ -169,7 +169,7 @@ func (i *stream) rotate() {
 			fn()
 		}()
 	}
-	rotateWithPriviledges(func() {
+	rotateWithPrivileges(func() {
 		backup := &bytes.Buffer{}
 		err := i.handleDb.Update(func(tx *bolt.Tx) error {
 			log.Printf("snapshotting %s of data", bytesize.New(float64(tx.Size())))
@@ -191,6 +191,8 @@ func (i *stream) rotate() {
 				constants.PacketLobbyInfo,
 				constants.PacketCarDamage,
 				constants.PacketSessionHistory,
+				constants.PacketTyreSets,
+				constants.PacketMotionEx,
 			} {
 				err = tx.DeleteBucket([]byte{bucketName})
 				if err != nil && !errors.Is(err, bolt.ErrBucketNotFound) {

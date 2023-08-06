@@ -3,13 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/packets/process"
 	"github.com/jakoblorz/autofone/packets/process/reader"
@@ -19,6 +12,12 @@ import (
 	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/websocket"
+	"io"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
 )
 
 type snapshotWriter struct {
@@ -162,15 +161,15 @@ for the packet ids to select.
 			}()
 			go func() {
 				boltWriter := &writer.Bolt{
-					P:      &stream,
-					Client: api,
-					DB:     db,
+					P:  &stream,
+					DB: db,
 				}
 				boltWriter.Motion = writer.NewMotionDebouncer(boltWriter, 0)
 				boltWriter.Lap = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarTelemetry = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.SessionHistory = writer.NewSessionHistoryDebouncer(boltWriter, 0)
+				boltWriter.TyreSets = writer.NewTyreSetsDebouncer(boltWriter, 0)
 				defer boltWriter.Close()
 
 				for {
