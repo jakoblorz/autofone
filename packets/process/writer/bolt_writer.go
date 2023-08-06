@@ -7,20 +7,20 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/jakoblorz/autofone/constants"
 	"github.com/jakoblorz/autofone/packets/process"
-	"github.com/jakoblorz/autofone/pkg/privateapi"
 	"github.com/jakoblorz/autofone/pkg/streamdb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Bolt struct {
 	*process.P
-	privateapi.Client
 
 	Motion         *motionDebouncer
 	Lap            *packetDebouncer
 	CarTelemetry   *packetDebouncer
 	CarStatus      *packetDebouncer
 	SessionHistory *sessionHistoryDebouncer
+	TyreSets       *tyreSetsDebouncer
+	MotionEx       *motionExDebouncer
 
 	DB streamdb.I
 }
@@ -40,6 +40,12 @@ func (ch *Bolt) Close() error {
 	}
 	if ch.SessionHistory != nil {
 		ch.SessionHistory.Stop()
+	}
+	if ch.TyreSets != nil {
+		ch.TyreSets.Stop()
+	}
+	if ch.MotionEx != nil {
+		ch.MotionEx.timer.Stop()
 	}
 	return nil
 }
@@ -80,6 +86,14 @@ func (ch *Bolt) Write(m *process.M) {
 	}
 	if ch.SessionHistory != nil && m.Header.GetPacketID() == constants.PacketSessionHistory {
 		ch.SessionHistory.Write(m)
+		return
+	}
+	if ch.TyreSets != nil && m.Header.GetPacketID() == constants.PacketTyreSets {
+		ch.TyreSets.Write(m)
+		return
+	}
+	if ch.MotionEx != nil && m.Header.GetPacketID() == constants.PacketMotionEx {
+		ch.MotionEx.Write(m)
 		return
 	}
 	ch.write(m)
