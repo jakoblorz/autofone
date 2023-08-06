@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/boltdb/bolt v1.3.1
+	github.com/boltdb/boltd v0.0.0-20150220181201-1f04e2021e45 // indirect
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/kr/text v0.2.0 // indirect
