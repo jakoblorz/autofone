@@ -170,6 +170,7 @@ for the packet ids to select.
 				boltWriter.CarStatus = writer.NewPacketDebouncer(boltWriter, 0)
 				boltWriter.SessionHistory = writer.NewSessionHistoryDebouncer(boltWriter, 0)
 				boltWriter.TyreSets = writer.NewTyreSetsDebouncer(boltWriter, 0)
+				boltWriter.MotionEx = writer.NewMotionExDebouncer(boltWriter, 0)
 				defer boltWriter.Close()
 
 				for {

@@ -13,6 +13,7 @@ import (
 
 const (
 	motionDebouncerInterval         = 250 * time.Millisecond
+	motionExDebouncerInterval       = 100 * time.Millisecond
 	packetDebouncerInterval         = 1 * time.Second
 	sessionHistoryDebouncerInterval = 10 * time.Second
 	tyreSetsDebouncerInterval       = 10 * time.Second
@@ -57,6 +58,19 @@ func NewMotionDebouncer(ch writer, interval time.Duration) *motionDebouncer {
 	return mdc
 }
 
+func NewMotionExDebouncer(ch writer, interval time.Duration) *motionExDebouncer {
+	if interval == 0 {
+		interval = motionExDebouncerInterval
+	}
+	mdc := &motionExDebouncer{
+		mx: &sync.Mutex{},
+
+		packages_23: make([]*packets.PacketMotionExData23, 0),
+	}
+	mdc.timer = time.AfterFunc(motionExDebouncerInterval, func() { mdc.WriteTo(ch) })
+	return mdc
+}
+
 func (dbc *packetDebouncer) Write(m *process.M) {
 	dbc.mx.Lock()
 	defer dbc.mx.Unlock()
@@ -78,6 +92,67 @@ func (dbc *packetDebouncer) WriteTo(ch writer) {
 
 	ch.write(dbc.currentPacket)
 	dbc.currentPacket = nil
+}
+
+type motionExDebouncer struct {
+	mx    sync.Locker
+	timer *time.Timer
+
+	h packets.PacketHeader
+
+	packages_23 []*packets.PacketMotionExData23
+}
+
+func (dbc *motionExDebouncer) Write(m *process.M) {
+	dbc.mx.Lock()
+	defer dbc.mx.Unlock()
+
+	dbc.h = m.Header
+
+	if m.Header.GetPacketFormat() == constants.PacketFormat_2023 {
+		dbc.packages_23 = append(dbc.packages_23, m.Pack.(*packets.PacketMotionExData23))
+	}
+}
+
+func (dbc *motionExDebouncer) WriteTo(ch writer) {
+	dbc.mx.Lock()
+	defer dbc.mx.Unlock()
+	defer func() {
+		dbc.timer = time.AfterFunc(motionDebouncerInterval, func() {
+			dbc.WriteTo(ch)
+		})
+	}()
+	if dbc.h == nil || len(dbc.packages_23) == 0 {
+		return
+	}
+
+	var pack interface{}
+	if dbc.h.GetPacketFormat() == constants.PacketFormat_2023 {
+		if len(dbc.packages_23) == 0 {
+			return
+		}
+		if len(dbc.packages_23) == 1 {
+			pack = dbc.packages_23[0]
+		} else {
+			pack = averageAndLastPlayerCarMotionEx23(dbc.packages_23).AverageAndLastPlayerCarMotionEx()
+		}
+	}
+
+	m := &process.M{
+		Header: dbc.h,
+		Pack:   pack,
+	}
+
+	var err error
+	m.Buffer, err = packets.Write_LE(pack)
+	if err != nil {
+		log.Printf("error encoding averaged packet: %v", err)
+		return
+	}
+
+	ch.write(m)
+	dbc.h = nil
+	dbc.packages_23 = make([]*packets.PacketMotionExData23, 0)
 }
 
 type motionDebouncer struct {
@@ -329,6 +404,119 @@ func (a averageAndLastPlayerCarMotion23) AverageAndLastPlayerCarMotion() *packet
 		pmd.CarMotionData[i].Pitch /= float32(len(a))
 		pmd.CarMotionData[i].Roll /= float32(len(a))
 	}
+
+	return &pmd
+}
+
+type averageAndLastPlayerCarMotionEx23 []*packets.PacketMotionExData23
+
+func (a averageAndLastPlayerCarMotionEx23) AverageAndLastPlayerCarMotionEx() *packets.PacketMotionExData23 {
+	pmd := *a[len(a)-1]
+	for _, p := range a {
+		pmd.SuspensionPosition[0] += p.SuspensionPosition[0]
+		pmd.SuspensionPosition[1] += p.SuspensionPosition[1]
+		pmd.SuspensionPosition[2] += p.SuspensionPosition[2]
+		pmd.SuspensionPosition[3] += p.SuspensionPosition[3]
+
+		pmd.SuspensionVelocity[0] += p.SuspensionVelocity[0]
+		pmd.SuspensionVelocity[1] += p.SuspensionVelocity[1]
+		pmd.SuspensionVelocity[2] += p.SuspensionVelocity[2]
+		pmd.SuspensionVelocity[3] += p.SuspensionVelocity[3]
+
+		pmd.SuspensionAcceleration[0] += p.SuspensionAcceleration[0]
+		pmd.SuspensionAcceleration[1] += p.SuspensionAcceleration[1]
+		pmd.SuspensionAcceleration[2] += p.SuspensionAcceleration[2]
+		pmd.SuspensionAcceleration[3] += p.SuspensionAcceleration[3]
+
+		pmd.WheelSpeed[0] += p.WheelSpeed[0]
+		pmd.WheelSpeed[1] += p.WheelSpeed[1]
+		pmd.WheelSpeed[2] += p.WheelSpeed[2]
+		pmd.WheelSpeed[3] += p.WheelSpeed[3]
+
+		pmd.WheelSlipRatio[0] += p.WheelSlipRatio[0]
+		pmd.WheelSlipRatio[1] += p.WheelSlipRatio[1]
+		pmd.WheelSlipRatio[2] += p.WheelSlipRatio[2]
+		pmd.WheelSlipRatio[3] += p.WheelSlipRatio[3]
+
+		pmd.WheelLatForce[0] += p.WheelLatForce[0]
+		pmd.WheelLatForce[1] += p.WheelLatForce[1]
+		pmd.WheelLatForce[2] += p.WheelLatForce[2]
+		pmd.WheelLatForce[3] += p.WheelLatForce[3]
+
+		pmd.WheelLongForce[0] += p.WheelLongForce[0]
+		pmd.WheelLongForce[1] += p.WheelLongForce[1]
+		pmd.WheelLongForce[2] += p.WheelLongForce[2]
+		pmd.WheelLongForce[3] += p.WheelLongForce[3]
+
+		pmd.HeightOfCOGAboveGround += p.HeightOfCOGAboveGround
+		pmd.LocalVelocityX += p.LocalVelocityX
+		pmd.LocalVelocityY += p.LocalVelocityY
+		pmd.LocalVelocityZ += p.LocalVelocityZ
+		pmd.AngularVelocityX += p.AngularVelocityX
+		pmd.AngularVelocityY += p.AngularVelocityY
+		pmd.AngularVelocityZ += p.AngularVelocityZ
+		pmd.AngularAccelerationX += p.AngularAccelerationX
+		pmd.AngularAccelerationY += p.AngularAccelerationY
+		pmd.AngularAccelerationZ += p.AngularAccelerationZ
+		pmd.FrontWheelAngle += p.FrontWheelAngle
+
+		pmd.WheelVertForce[0] += p.WheelVertForce[0]
+		pmd.WheelVertForce[1] += p.WheelVertForce[1]
+		pmd.WheelVertForce[2] += p.WheelVertForce[2]
+		pmd.WheelVertForce[3] += p.WheelVertForce[3]
+	}
+
+	pmd.SuspensionPosition[0] /= float32(len(a))
+	pmd.SuspensionPosition[1] /= float32(len(a))
+	pmd.SuspensionPosition[2] /= float32(len(a))
+	pmd.SuspensionPosition[3] /= float32(len(a))
+
+	pmd.SuspensionVelocity[0] /= float32(len(a))
+	pmd.SuspensionVelocity[1] /= float32(len(a))
+	pmd.SuspensionVelocity[2] /= float32(len(a))
+	pmd.SuspensionVelocity[3] /= float32(len(a))
+
+	pmd.SuspensionAcceleration[0] /= float32(len(a))
+	pmd.SuspensionAcceleration[1] /= float32(len(a))
+	pmd.SuspensionAcceleration[2] /= float32(len(a))
+	pmd.SuspensionAcceleration[3] /= float32(len(a))
+
+	pmd.WheelSpeed[0] /= float32(len(a))
+	pmd.WheelSpeed[1] /= float32(len(a))
+	pmd.WheelSpeed[2] /= float32(len(a))
+	pmd.WheelSpeed[3] /= float32(len(a))
+
+	pmd.WheelSlipRatio[0] /= float32(len(a))
+	pmd.WheelSlipRatio[1] /= float32(len(a))
+	pmd.WheelSlipRatio[2] /= float32(len(a))
+	pmd.WheelSlipRatio[3] /= float32(len(a))
+
+	pmd.WheelLatForce[0] /= float32(len(a))
+	pmd.WheelLatForce[1] /= float32(len(a))
+	pmd.WheelLatForce[2] /= float32(len(a))
+	pmd.WheelLatForce[3] /= float32(len(a))
+
+	pmd.WheelLongForce[0] /= float32(len(a))
+	pmd.WheelLongForce[1] /= float32(len(a))
+	pmd.WheelLongForce[2] /= float32(len(a))
+	pmd.WheelLongForce[3] /= float32(len(a))
+
+	pmd.HeightOfCOGAboveGround /= float32(len(a))
+	pmd.LocalVelocityX /= float32(len(a))
+	pmd.LocalVelocityY /= float32(len(a))
+	pmd.LocalVelocityZ /= float32(len(a))
+	pmd.AngularVelocityX /= float32(len(a))
+	pmd.AngularVelocityY /= float32(len(a))
+	pmd.AngularVelocityZ /= float32(len(a))
+	pmd.AngularAccelerationX /= float32(len(a))
+	pmd.AngularAccelerationY /= float32(len(a))
+	pmd.AngularAccelerationZ /= float32(len(a))
+	pmd.FrontWheelAngle /= float32(len(a))
+
+	pmd.WheelVertForce[0] /= float32(len(a))
+	pmd.WheelVertForce[1] /= float32(len(a))
+	pmd.WheelVertForce[2] /= float32(len(a))
+	pmd.WheelVertForce[3] /= float32(len(a))
 
 	return &pmd
 }

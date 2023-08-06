@@ -20,6 +20,7 @@ type Bolt struct {
 	CarStatus      *packetDebouncer
 	SessionHistory *sessionHistoryDebouncer
 	TyreSets       *tyreSetsDebouncer
+	MotionEx       *motionExDebouncer
 
 	DB streamdb.I
 }
@@ -39,6 +40,12 @@ func (ch *Bolt) Close() error {
 	}
 	if ch.SessionHistory != nil {
 		ch.SessionHistory.Stop()
+	}
+	if ch.TyreSets != nil {
+		ch.TyreSets.Stop()
+	}
+	if ch.MotionEx != nil {
+		ch.MotionEx.timer.Stop()
 	}
 	return nil
 }
@@ -83,6 +90,10 @@ func (ch *Bolt) Write(m *process.M) {
 	}
 	if ch.TyreSets != nil && m.Header.GetPacketID() == constants.PacketTyreSets {
 		ch.TyreSets.Write(m)
+		return
+	}
+	if ch.MotionEx != nil && m.Header.GetPacketID() == constants.PacketMotionEx {
+		ch.MotionEx.Write(m)
 		return
 	}
 	ch.write(m)
